@@ -1,6 +1,6 @@
-# euricom-ai-provider-mgr
+# euricom-aimgr
 
-Command set
+## CLI
 
 ```bash
 # help & usage
