@@ -4,17 +4,6 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import { Command } from "@commander-js/extra-typings";
-import {
-  handleAddProvider,
-  handleCreateUser,
-  handleListProviders,
-  handleListUsers,
-  handleProviderDetails,
-  handleRemoveAllProviders,
-  handleRemoveProvider,
-  handleSetProviderLimit,
-  handleUserDetails,
-} from "./commands";
 
 const program = new Command();
 
@@ -26,97 +15,124 @@ program
 
 // Command map for interactive mode
 const commandHandlers = {
-  createUser: handleCreateUser,
-  listUsers: handleListUsers,
-  userDetails: handleUserDetails,
-  removeAllProviders: handleRemoveAllProviders,
-  removeProvider: handleRemoveProvider,
-  listProviders: handleListProviders,
-  providerDetails: handleProviderDetails,
-  addProvider: handleAddProvider,
-  setProviderLimit: handleSetProviderLimit,
+  // user commands
+  createUser: (options: any) => console.log("not implemented", options),
+  listUsers: (options: any) => console.log("not implemented", options),
+  userDetails: (options: any) => console.log("not implemented", options),
+  disableUser: (options: any) => console.log("not implemented", options),
+  removeUser: (options: any) => console.log("not implemented", options),
+  addKey: (options: any) => console.log("not implemented", options),
+  setLimit: (options: any) => console.log("not implemented", options),
+  // provider commands
+  listProviders: () => console.log("not implemented"),
+  setLimitProviders: (options: any) => console.log("not implemented", options),
   exit: () => {},
 } as const;
 
 // Direct CLI commands
 
 program
-  .command("create-user")
-  .description("Create a new user")
-  .argument("<email>", "User's email address")
-  .argument("<name>", "User's name")
-  .action(async (email, name) => {
-    await handleCreateUser(email, name);
-  });
-
-program
-  .command("users")
-  .description("List all registered users")
-  .option("-f, --filter <email>", "Filter users by email")
-  .action(async (options) => {
-    await handleListUsers(options.filter);
-  });
-
-program
   .command("user")
-  .description("View user account details")
-  .argument("<email>", "User's email address")
-  .action(async (email) => {
-    await handleUserDetails(email);
-  });
-
-program
-  .command("add-provider")
-  .description("Add a provider for user")
-  .argument("<email>", "User's email address")
-  .requiredOption(
-    "-p, --provider <provider>",
-    "API provider (openai, anthropic, openrouter)"
+  .description("User management commands")
+  .addCommand(
+    new Command("add")
+      .description("Create a new user")
+      .requiredOption("-e, --email <email>", "User's email address")
+      .requiredOption("-n, --name <name>", "User's name")
+      .option(
+        "-p, --provider <providers>",
+        "Comma-separated list of providers (openai,anthropic,openrouter)"
+      )
+      .action(async (options) => {
+        commandHandlers.createUser(options);
+      })
   )
-  .action(async (email, options) => {
-    await commandHandlers.addProvider(email, options.provider);
-  });
+
+  .addCommand(
+    new Command("list")
+      .description("List all registered users")
+      .option("-f, --filter <filter>", "Filter users by email")
+      .action(async (options) => {
+        commandHandlers.listUsers(options);
+      })
+  )
+  .addCommand(
+    new Command("info")
+      .description("Show detailed user info")
+      .argument("<email>", "User's email address")
+      .action(async (email) => {
+        commandHandlers.userDetails(email);
+      })
+  )
+  .addCommand(
+    new Command("remove")
+      .description("Remove provider(s) for a user")
+      .argument("<email>", "User's email address")
+      .option(
+        "-p, --provider <providers>",
+        "Specific provider to remove (if not specified, removes all)",
+        "Comma-separated list of providers (openai,anthropic,openrouter)"
+      )
+      .action(async (email, options) => {
+        commandHandlers.removeUser({
+          email,
+          provider: options.provider,
+        });
+      })
+  )
+  .addCommand(
+    new Command("add-key")
+      .description("Add API key(s) for a user")
+      .argument("<email>", "User's email address")
+      .requiredOption(
+        "-p, --provider <providers>",
+        "Comma-separated list of providers (openai,anthropic,openrouter)"
+      )
+      .action(async (email, options) => {
+        commandHandlers.addKey({
+          email,
+          provider: options.provider,
+        });
+      })
+  )
+  .addCommand(
+    new Command("set-limit")
+      .description("Set credit limit for a user's provider")
+      .argument("<email>", "User's email address")
+      .requiredOption("-p, --provider <provider>", "Provider name")
+      .requiredOption("-l, --limit <limit>", "Credit limit")
+      .action(async (email, options) => {
+        commandHandlers.setLimit({
+          email,
+          provider: options.provider,
+          limit: options.limit,
+        });
+      })
+  );
 
 program
-  .command("delete-providers")
-  .description("Delete all providers from user")
-  .argument("<email>", "User's email address")
-  .action(async (email) => {
-    await commandHandlers.removeAllProviders(email);
-  });
+  .command("provider")
+  .description("Provider management commands")
+  .addCommand(
+    new Command("list").description("List all providers").action(async () => {
+      commandHandlers.listProviders();
+    })
+  )
 
-program
-  .command("delete-provider")
-  .description("Delete specific provider from user")
-  .argument("<email>", "User's email address")
-  .argument("<provider>", "Provider to remove (openai, anthropic, openrouter)")
-  .action(async (email, provider) => {
-    await commandHandlers.removeProvider(email, provider);
-  });
-
-program
-  .command("providers")
-  .description("View all available providers")
-  .action(async () => {
-    await commandHandlers.listProviders();
-  });
-
-program
-  .command("provider-details")
-  .description("View provider details")
-  .argument("<provider>", "Provider name (openai, anthropic, openrouter)")
-  .action(async (provider) => {
-    await commandHandlers.providerDetails(provider);
-  });
-
-program
-  .command("set-limit")
-  .description("Set credit limit for a provider")
-  .argument("<email>", "User's email address")
-  .argument("<provider>", "Provider name (openai, anthropic, openrouter)")
-  .argument("<limit>", "New credit limit")
-  .action(async (email, provider, limit) => {
-    await commandHandlers.setProviderLimit(email, provider, Number(limit));
-  });
+  .addCommand(
+    new Command("set-limit")
+      .description("Set limit for all users for a provider")
+      .requiredOption(
+        "-p, --provider <providers>",
+        "Comma-separated list of providers (openai,anthropic,openrouter)"
+      )
+      .requiredOption("-l, --limit <limit>", "Credit limit")
+      .action(async (options) => {
+        commandHandlers.setLimit({
+          provider: options.provider,
+          limit: options.limit,
+        });
+      })
+  );
 
 program.parse();

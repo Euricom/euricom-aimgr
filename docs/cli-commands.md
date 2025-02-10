@@ -1,155 +1,112 @@
-# API Manager CLI Tool Documentation
+# AI Manager CLI Commands
 
-A command-line interface tool for managing API keys, users, and providers.
-
-## Installation
+## Basic Commands
 
 ```bash
-npm install
-npm link
+# show help
+aimgr --help
+
+# show version
+aimgr --version
 ```
 
-## Usage
+## User Management
 
-Run commands using the `aimgr` command:
+### Create User
 
 ```bash
-aimgr <command> [options]
+# create a new user
+aimgr user add --email john.doe@euri.com \
+               --name "John Doe" \
+               [--provider openai,anthropic,openrouter]
+
+# Required Options:
+#   -e, --email <email>      User's email address
+#   -n, --name <name>        User's name
+# Optional Options:
+#   -p, --provider <providers>  Comma-separated list of providers (openai,anthropic,openrouter)
 ```
 
-## Available Commands
-
-### User Management
-
-#### Create User
-
-Creates a new user account.
+### List Users
 
 ```bash
-aimgr create-user <email> <name>
+# list all users
+aimgr user list
+
+# filter users by email
+aimgr user list --filter john
+
+# Optional Options:
+#   -f, --filter <filter>    Filter users by email
 ```
 
-Example:
+### User Details
 
 ```bash
-aimgr create-user john@example.com "John Smith"
+# show detailed user info
+aimgr user info john.doe@euri.com
+
+# Arguments:
+#   <email>    User's email address
 ```
 
-#### List All Users
-
-Shows a table of all users. Can be filtered by email.
+### Remove User Provider(s)
 
 ```bash
-aimgr users [--filter <email>]
+# remove provider(s) for a user
+aimgr user remove john.doe@euri.com
+
+# remove specific provider(s) for a user
+aimgr user remove john.doe@euri.com --provider openai,anthropic
+
+# Arguments:
+#   <email>    User's email address
+# Optional Options:
+#   -p, --provider <providers>  Specific provider(s) to remove (if not specified, removes all)
+#                              Comma-separated list of providers (openai,anthropic,openrouter)
 ```
 
-Example:
+### Add API Keys
 
 ```bash
-aimgr users
-aimgr users --filter john@example
+# add API key(s) for a user
+aimgr user add-key john.doe@euri.com --provider openai,anthropic,openrouter
+
+# Arguments:
+#   <email>    User's email address
+# Required Options:
+#   -p, --provider <providers>  Comma-separated list of providers (openai,anthropic,openrouter)
 ```
 
-#### Get User Details
-
-Displays detailed information about a specific user.
+### Set User Provider Limit
 
 ```bash
-aimgr user <email>
+# set credit limit for a user's provider
+aimgr user set-limit john.doe@euri.com --provider openai --limit 10
+
+# Arguments:
+#   <email>    User's email address
+# Required Options:
+#   -p, --provider <provider>   Provider name
+#   -l, --limit <limit>        Credit limit
 ```
 
-Example:
+## Provider Management
+
+### List Providers
 
 ```bash
-aimgr user john@example.com
+# list all providers
+aimgr provider list
 ```
 
-### Provider Management
-
-#### List All Providers
-
-Shows all available API providers.
+### Set Provider Limit
 
 ```bash
-aimgr providers
-```
+# set limit for all users for a provider
+aimgr provider set-limit --provider openai --limit 10
 
-#### Get Provider Details
-
-Displays detailed information about a specific provider.
-
-```bash
-aimgr provider-details <provider>
-```
-
-Example:
-
-```bash
-aimgr provider-details openai
-```
-
-#### Add Provider
-
-Adds a provider for a specific user.
-
-```bash
-aimgr add-provider <email> --provider <provider>
-```
-
-Example:
-
-```bash
-aimgr add-provider john@example.com --provider openai
-```
-
-Supported providers: openai, anthropic, openrouter
-
-#### Remove Provider
-
-Removes a specific provider from a user.
-
-```bash
-aimgr delete-provider <email> <provider>
-```
-
-Example:
-
-```bash
-aimgr delete-provider john@example.com openai
-```
-
-#### Remove All Providers
-
-Removes all providers from a user.
-
-```bash
-aimgr delete-providers <email>
-```
-
-Example:
-
-```bash
-aimgr delete-providers john@example.com
-```
-
-#### Set Provider Limit
-
-Sets the credit limit for a specific provider.
-
-```bash
-aimgr set-limit <email> <provider> <limit>
-```
-
-Example:
-
-```bash
-aimgr set-limit john@example.com openai 1000
-```
-
-## Version
-
-Current version: 0.1.0
-
-```
-
+# Required Options:
+#   -p, --provider <providers>  Comma-separated list of providers (openai,anthropic,openrouter)
+#   -l, --limit <limit>        Credit limit
 ```

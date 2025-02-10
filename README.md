@@ -36,7 +36,7 @@ Libraries
 - CLI Commands: cac (or commander & inquirer)
 - Colors: picocolors (or chalk)
 - Spinners: cli-spinners
-- Console: consola (or etter-console)
+- Console: consola (or better-console)
 - Console Tables: Table (cli-table3)
 - Debug log: debug
 - Run TS: tsx (geen tsnode)
@@ -71,7 +71,7 @@ aimgr user list --filter john
 # give all info of a user
 aimgr user info john.doo@euri.com
 
-# disable API keys (open AI and remove Anthropic & openRouter keys)
+# disable API keys (open AI and remove Anthropic & openRouter keys) optional !!!!
 aimgr user disable john.doo@euri.com
 
 # remove all providers for a user
@@ -81,13 +81,19 @@ aimgr user remove john.doo@euri.com
 aimgr user remove john.doo@euri.com --provider openai
 
 # create a API key for a user (open router)
-aimgr user add-key john.doo@euri.com
+aimgr user add-key john.doo@euri.com --provider openai, openrouter, anthropic
+
+# print the available credit of a provider
+aimgr user set-limit john.doo@euri.com --provider openai --limit 10
 
 # list all providers
 aimgr provider list
 
-# print the available credit of a provider
-aimgr provider credit --provider openrouter
+# set limit for all users for a provider
+aimgr provider set-limit --provider openai --limit 10
+
+
+
 ```
 
 ## Info
