@@ -6,21 +6,15 @@ A command-line interface tool for managing API keys, users, and providers.
 
 ```bash
 npm install
+npm link
 ```
 
 ## Usage
 
-Run commands in development mode:
+Run commands using the `aimgr` command:
 
 ```bash
-npm run dev -- <command> [options]
-```
-
-Or in production mode after building:
-
-```bash
-npm run build
-npm start -- <command> [options]
+aimgr <command> [options]
 ```
 
 ## Available Commands
@@ -32,13 +26,13 @@ npm start -- <command> [options]
 Creates a new user account.
 
 ```bash
-npm run dev -- create-user <email> <name>
+aimgr create-user <email> <name>
 ```
 
 Example:
 
 ```bash
-npm run dev -- create-user john@example.com "John Smith"
+aimgr create-user john@example.com "John Smith"
 ```
 
 #### List All Users
@@ -46,14 +40,14 @@ npm run dev -- create-user john@example.com "John Smith"
 Shows a table of all users. Can be filtered by email.
 
 ```bash
-npm run dev -- users [--filter <email>]
+aimgr users [--filter <email>]
 ```
 
 Example:
 
 ```bash
-npm run dev -- users
-npm run dev -- users --filter john@example
+aimgr users
+aimgr users --filter john@example
 ```
 
 #### Get User Details
@@ -61,13 +55,13 @@ npm run dev -- users --filter john@example
 Displays detailed information about a specific user.
 
 ```bash
-npm run dev -- user <email>
+aimgr user <email>
 ```
 
 Example:
 
 ```bash
-npm run dev -- user john@example.com
+aimgr user john@example.com
 ```
 
 ### Provider Management
@@ -77,7 +71,7 @@ npm run dev -- user john@example.com
 Shows all available API providers.
 
 ```bash
-npm run dev -- providers
+aimgr providers
 ```
 
 #### Get Provider Details
@@ -85,13 +79,13 @@ npm run dev -- providers
 Displays detailed information about a specific provider.
 
 ```bash
-npm run dev -- provider-details <provider>
+aimgr provider-details <provider>
 ```
 
 Example:
 
 ```bash
-npm run dev -- provider-details openai
+aimgr provider-details openai
 ```
 
 #### Add Provider
@@ -99,13 +93,13 @@ npm run dev -- provider-details openai
 Adds a provider for a specific user.
 
 ```bash
-npm run dev -- add-provider <email> --provider <provider>
+aimgr add-provider <email> --provider <provider>
 ```
 
 Example:
 
 ```bash
-npm run dev -- add-provider john@example.com --provider openai
+aimgr add-provider john@example.com --provider openai
 ```
 
 Supported providers: openai, anthropic, openrouter
@@ -115,13 +109,13 @@ Supported providers: openai, anthropic, openrouter
 Removes a specific provider from a user.
 
 ```bash
-npm run dev -- delete-provider <email> <provider>
+aimgr delete-provider <email> <provider>
 ```
 
 Example:
 
 ```bash
-npm run dev -- delete-provider john@example.com openai
+aimgr delete-provider john@example.com openai
 ```
 
 #### Remove All Providers
@@ -129,13 +123,13 @@ npm run dev -- delete-provider john@example.com openai
 Removes all providers from a user.
 
 ```bash
-npm run dev -- delete-providers <email>
+aimgr delete-providers <email>
 ```
 
 Example:
 
 ```bash
-npm run dev -- delete-providers john@example.com
+aimgr delete-providers john@example.com
 ```
 
 #### Set Provider Limit
@@ -143,13 +137,13 @@ npm run dev -- delete-providers john@example.com
 Sets the credit limit for a specific provider.
 
 ```bash
-npm run dev -- set-limit <email> <provider> <limit>
+aimgr set-limit <email> <provider> <limit>
 ```
 
 Example:
 
 ```bash
-npm run dev -- set-limit john@example.com openai 1000
+aimgr set-limit john@example.com openai 1000
 ```
 
 ## Version

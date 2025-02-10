@@ -22,30 +22,31 @@ src/
 ```
 
 Dev Tools
+
 - linting: oxlint
 - formatting: prettier
 - language: typescript
-- package manager: pnpm 
+- package manager: pnpm
 - build: tsup
 - node: >=18
 - spelling: cspell
 
 Libraries
+
 - CLI Commands: cac (or commander & inquirer)
 - Colors: picocolors (or chalk)
 - Spinners: cli-spinners
 - Console: consola (or etter-console)
-- Console Tables:  Table (cli-table3)
+- Console Tables: Table (cli-table3)
 - Debug log: debug
 - Run TS: tsx (geen tsnode)
-
 
 ## CLI
 
 ```bash
 # install
 npm install https://github.com/euricom/aimgr.git --global
-# or 
+# or
 npm install github:euricom/aimgr --global
 
 ## Help & Version
@@ -59,7 +60,7 @@ aimgr --help
 # create a new user
 aimgr user add --email john.doo@euri.com \
                --name "John Doo" \
-               --provider openai, anthropic 
+               --provider openai, anthropic
 
 # give a list of all users (no filter)
 aimgr user list
@@ -92,6 +93,6 @@ aimgr provider credit --provider openrouter
 ## Info
 
 CLI Template/Sample Project
+
 - https://github.com/emosheeep/cli-template
 - https://github.com/egoist/tsup/blob/main/package.json
-  

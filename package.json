@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "description": "CLI tool for API key and user management",
   "main": "dist/index.js",
+  "bin": {
+    "aimgr": "bin/aimgr.js"
+  },
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
@@ -11,16 +14,17 @@
   "dependencies": {
     "@commander-js/extra-typings": "^11.1.0",
     "@types/commander": "^2.12.2",
-    "commander": "^11.1.0",
-    "inquirer": "^12.4.1",
-    "openai": "^4.28.0",
-    "dotenv": "^16.0.3",
+    "chalk": "^5.3.0",
     "cli-spinners": "^2.9.2",
-    "chalk": "^5.3.0"
+    "commander": "^11.1.0",
+    "dotenv": "^16.0.3",
+    "inquirer": "^12.4.1",
+    "openai": "^4.28.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "esbuild-register": "^3.6.0",
     "tsx": "^4.7.0",
     "typescript": "^5.0.0"
   }
-} 
+}

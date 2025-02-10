@@ -44,6 +44,10 @@ coverage/
 # Services
 src/services
 
+# Local development
+.npmrc
+.node_repl_history
+
 
 
 
