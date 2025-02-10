@@ -38,8 +38,6 @@ const commandHandlers = {
   exit: () => {},
 } as const;
 
-type CommandType = keyof typeof commandHandlers;
-
 // Direct CLI commands
 
 program
