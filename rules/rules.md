@@ -1,5 +1,8 @@
 # Here are some cursor rules for different technologies:
 
+TODO: move and rename to IDE specific rules
+
+
 ## Express.js and TypeScript
 
 ```

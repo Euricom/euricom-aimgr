@@ -25,6 +25,18 @@ aimgr user add --email john.doe@euri.com \
 #   -n, --name <name>        User's name
 # Optional Options:
 #   -p, --provider <providers>  Comma-separated list of providers (openai,anthropic,openrouter)
+
+TODO: correct usage, argument and/or options
+TODO: do we need this extra info? probably not
+
+# Usage: user add [options] 
+# 
+# Add one or more provider account for a user
+#
+# Options:
+#   -e, --email <email>         User's email address
+#   -n, --name <name>           User's name
+#   -p, --provider [providers]  Optional Comma-separated list of ...
 ```
 
 ### List Users

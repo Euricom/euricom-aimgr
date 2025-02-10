@@ -4,10 +4,25 @@
 
 ### user add
 
-```bash
+```code
 $ aimgr user add --email john.doe@euri.com --name "John Doe" --provider openai,anthropic
 
-✓ User created successfully
+✓ User created successfully: John Doe (john.doe@euri.com) 
+
+
+TODO: review this output
+
+| Provider   | API Keys          | Value              | Credits        |
+| ---------- | ----------------- | ------------------ | -------------- |
+| OpenAI     | Cursor            | xxxxxxxxxxxxxxxxxx | $0.1 of $5.0/m |
+| Anthropic  | Default           | xxxxxxxxxxxxxxxxxx | $1.5 of $5.0/m |
+| OpenRouter | john.doe@euri.com | xxxxxxxxxxxxxxxxxx | $5.2 of $10    |
+
+TODO: Example for no keys (disabled, removed)
+
+| Provider | API Keys | Value | Credits |
+| -------- | -------- | ----- | ------- |
+| -        | -        | -     | -       |
 
 User Details:
 ┌──────────────────┬──────────────────────┐
@@ -48,6 +63,8 @@ Users:
 ```bash
 $ aimgr user info john.doe@euri.com
 
+TODO: idem as user create
+
 User Details:
 ┌──────────────┬──────────────────────┐
 │ Email        │ john.doe@euri.com    │
@@ -73,6 +90,9 @@ $ aimgr user remove john.doe@euri.com --provider openai
 
 ✓ Provider removed successfully
 
+TODO: idem as user create, info
+
+
 Updated Provider List:
 ┌───────────┬──────────┐
 │ Provider  │ Status   │
@@ -87,6 +107,8 @@ Updated Provider List:
 $ aimgr user add-key john.doe@euri.com --provider openai
 
 ✓ API key added successfully
+
+TODO: idem as user create, info
 
 Provider Status:
 ┌───────────┬──────────┬────────────────┐
@@ -103,6 +125,8 @@ $ aimgr user set-limit john.doe@euri.com --provider openai --limit 1000
 
 ✓ Credit limit updated successfully
 
+TODO: idem as user create, info
+
 Updated Provider:
 ┌───────────┬──────────┬───────────────┬────────────────┐
 │ Provider  │ Status   │ Credit Limit  │ Credits Used   │
@@ -117,6 +141,8 @@ Updated Provider:
 
 ```bash
 $ aimgr provider list
+
+TODO: active user is not mandatory
 
 Available Providers:
 ┌────────────┬────────────────┬─────────────────┐
@@ -134,6 +160,8 @@ Available Providers:
 $ aimgr provider set-limit --provider openai --limit 1000
 
 ✓ Provider limit updated successfully
+
+TODO: active user is not mandatory, output idem as provider list
 
 Updated Provider:
 ┌────────────┬────────────────┬─────────────────┐
