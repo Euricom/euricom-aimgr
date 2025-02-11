@@ -2,6 +2,11 @@
 
 import debug from 'debug';
 import dotenv from 'dotenv';
+import { validateEnvironment } from './utils/environment';
+
+// Validate environment before any other initialization
+validateEnvironment();
+
 dotenv.config();
 
 // Create debug instances for different parts of the application
@@ -20,36 +25,47 @@ program
 
 debugCLI('CLI initialized');
 
-// Command map for interactive mode
+type CommandOptions = {
+  addKey: { email: string; provider: string };
+  createUser: { email: string; name: string; provider?: string };
+  disableUser: { email: string };
+  listUsers: { filter?: string };
+  removeUser: { email: string; provider?: string };
+  setLimit: { email: string; provider: string; limit: number };
+  setLimitProviders: { provider: string; limit: number };
+  userDetails: { email: string };
+};
+
 const commandHandlers = {
-  addKey: async (options: any) => {
+  addKey: async (options: CommandOptions['addKey']) => {
     debugCmd('addKey command called with options: %O', options);
     // TODO: Implement addKey logic
   },
-  createUser: async (options: any) => {
+  createUser: async (options: CommandOptions['createUser']) => {
     debugCmd('createUser command called with options: %O', options);
     // TODO: Implement createUser logic
   },
-  disableUser: async (options: any) => {
+  disableUser: async (options: CommandOptions['disableUser']) => {
+    debugCmd('disableUser command called with options: %O', options);
     // TODO: Implement disableUser logic
   },
   exit: () => {},
   listProviders: async () => {
     // TODO: Implement listProviders logic
   },
-  listUsers: async (options: any) => {
+  listUsers: async (options: CommandOptions['listUsers']) => {
     console.log('listUsers', options);
   },
-  removeUser: async (options: any) => {
+  removeUser: async (options: CommandOptions['removeUser']) => {
     // TODO: Implement removeUser logic
   },
-  setLimit: async (options: any) => {
+  setLimit: async (options: CommandOptions['setLimit']) => {
     // TODO: Implement setLimit logic
   },
-  setLimitProviders: async (options: any) => {
+  setLimitProviders: async (options: CommandOptions['setLimitProviders']) => {
     // TODO: Implement setLimitProviders logic
   },
-  userDetails: async (options: any) => {
+  userDetails: async (options: CommandOptions['userDetails']) => {
     // TODO: Implement userDetails logic
   },
 } as const;
@@ -95,7 +111,6 @@ program
       .argument('<email>', "User's email address")
       .option(
         '-p, --provider <providers>',
-        'Specific provider to remove (if not specified, removes all)',
         'Comma-separated list of providers (openai,anthropic,openrouter)'
       )
       .action(async (email, options) => {
@@ -131,6 +146,14 @@ program
           limit: options.limit,
           provider: options.provider,
         });
+      })
+  )
+  .addCommand(
+    new Command('disable')
+      .description('Disable a user')
+      .argument('<email>', "User's email address")
+      .action(async email => {
+        commandHandlers.disableUser({ email });
       })
   );
 
