@@ -1,5 +1,7 @@
 Master Plan: Console App for API Key & User Management
 
+TODO: can go into root
+
 ### Technology Stack
 
 - Node.js with Express.js (Backend server)
