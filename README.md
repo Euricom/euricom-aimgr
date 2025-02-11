@@ -26,18 +26,18 @@ npm install https://github.com/euricom/euricom-aimgr.git --global
 
 ```bash
 # Run in development mode (with commands)
-pnpm dev -- user list
-pnpm dev -- user add --email john@example.com --name "John Doe"
+pnpm dev user list
+pnpm dev user add --email john@example.com --name "John Doe"
+
+# Build the project
+pnpm build
+
+# Run in production mode (after building)
+pnpm start user list
+pnpm start user add --email john@example.com --name "John Doe"
 
 # Build with watch mode (auto-rebuilds on changes)
 pnpm build:watch
-
-# Build the project for production
-pnpm build
-
-# Run the production build (with commands)
-pnpm start -- user list
-pnpm start -- user add --email john@example.com --name "John Doe"
 ```
 
 ### Development Scripts
@@ -68,7 +68,7 @@ aimgr user info john.doo@euri.com  # Show user details
 # User Creation and Modification
 aimgr user add --email john.doo@euri.com \
                --name "John Doo" \
-               --provider openai,anthropic
+               [--provider openai,anthropic]
 
 aimgr user add-key john.doo@euri.com --provider openai,openrouter,anthropic
 aimgr user set-limit john.doo@euri.com --provider openai --limit 10

@@ -1,20 +1,16 @@
 #!/usr/bin/env node
 
-import debug from 'debug';
+import { Command } from '@commander-js/extra-typings';
+import debugFn from 'debug';
 import dotenv from 'dotenv';
-import { validateEnvironment } from './utils/environment';
-import { logger } from './utils/logger';
-
-// Validate environment before any other initialization
-validateEnvironment();
 
 dotenv.config();
 
 // Create debug instances for different parts of the application
-const debugCLI = debug('aimgr:cli');
-const debugCmd = debug('aimgr:cmd');
+const debug = debugFn('aimgr:cli');
 
-import { Command } from '@commander-js/extra-typings';
+// Add some debug messages
+debug('Initializing CLI application');
 
 const program = new Command();
 
@@ -24,60 +20,7 @@ program
   .description('CLI tool for API key and user management')
   .version('0.1.0');
 
-debugCLI('CLI initialized');
-
-interface CommandOptions {
-  addKey: { email: string; provider: string };
-  createUser: { email: string; name: string; provider?: string };
-  disableUser: { email: string };
-  listUsers: { filter?: string };
-  removeUser: { email: string; provider?: string };
-  setLimit: { email: string; limit: number; provider: string };
-  setLimitProviders: { limit: number; provider: string };
-  userDetails: { email: string };
-}
-
-const commandHandlers = {
-  addKey: async (options: CommandOptions['addKey']) => {
-    debugCmd('addKey command called with options: %O', options);
-    // TODO: Implement addKey logic
-  },
-  createUser: async (options: CommandOptions['createUser']) => {
-    debugCmd('createUser command called with options: %O', options);
-    // TODO: Implement createUser logic
-  },
-  disableUser: async (options: CommandOptions['disableUser']) => {
-    debugCmd('disableUser command called with options: %O', options);
-    // TODO: Implement disableUser logic
-  },
-  exit: () => {
-    debugCmd('exit command called');
-  },
-  listProviders: async () => {
-    debugCmd('listProviders command called');
-    // TODO: Implement listProviders logic
-  },
-  listUsers: async (options: CommandOptions['listUsers']) => {
-    debugCmd('listUsers command called with options: %O', options);
-    logger.log('listUsers', options);
-  },
-  removeUser: async (options: CommandOptions['removeUser']) => {
-    debugCmd('removeUser command called with options: %O', options);
-    // TODO: Implement removeUser logic
-  },
-  setLimit: async (options: CommandOptions['setLimit']) => {
-    debugCmd('setLimit command called with options: %O', options);
-    // TODO: Implement setLimit logic
-  },
-  setLimitProviders: async (options: CommandOptions['setLimitProviders']) => {
-    debugCmd('setLimitProviders command called with options: %O', options);
-    // TODO: Implement setLimitProviders logic
-  },
-  userDetails: async (options: CommandOptions['userDetails']) => {
-    debugCmd('userDetails command called with options: %O', options);
-    // TODO: Implement userDetails logic
-  },
-} as const;
+debug('CLI configuration completed');
 
 // Direct CLI commands
 
@@ -94,7 +37,7 @@ program
         'Comma-separated list of providers (openai,anthropic,openrouter)'
       )
       .action(async options => {
-        commandHandlers.createUser(options);
+        console.log(options);
       })
   )
 
@@ -103,7 +46,7 @@ program
       .description('List all registered users')
       .option('-f, --filter <filter>', 'Filter users by email')
       .action(async options => {
-        commandHandlers.listUsers(options);
+        console.log(options);
       })
   )
   .addCommand(
@@ -111,7 +54,7 @@ program
       .description('Show detailed user info')
       .argument('<email>', "User's email address")
       .action(async email => {
-        commandHandlers.userDetails({ email });
+        console.log(email);
       })
   )
   .addCommand(
@@ -123,10 +66,7 @@ program
         'Comma-separated list of providers (openai,anthropic,openrouter)'
       )
       .action(async (email, options) => {
-        commandHandlers.removeUser({
-          email,
-          provider: options.provider,
-        });
+        console.log(email, options);
       })
   )
   .addCommand(
@@ -138,10 +78,7 @@ program
         'Comma-separated list of providers (openai,anthropic,openrouter)'
       )
       .action(async (email, options) => {
-        commandHandlers.addKey({
-          email,
-          provider: options.provider,
-        });
+        console.log(email, options);
       })
   )
   .addCommand(
@@ -151,11 +88,7 @@ program
       .requiredOption('-p, --provider <provider>', 'Provider name')
       .requiredOption('-l, --limit <limit>', 'Credit limit')
       .action(async (email, options) => {
-        commandHandlers.setLimit({
-          email,
-          limit: Number(options.limit),
-          provider: options.provider,
-        });
+        console.log(email, options);
       })
   )
   .addCommand(
@@ -163,7 +96,7 @@ program
       .description('Disable a user')
       .argument('<email>', "User's email address")
       .action(async email => {
-        commandHandlers.disableUser({ email });
+        console.log(email);
       })
   );
 
@@ -172,7 +105,7 @@ program
   .description('Provider management commands')
   .addCommand(
     new Command('list').description('List all providers').action(async () => {
-      commandHandlers.listProviders();
+      console.log('list providers');
     })
   )
 
@@ -185,12 +118,8 @@ program
       )
       .requiredOption('-l, --limit <limit>', 'Credit limit')
       .action(async options => {
-        commandHandlers.setLimitProviders({
-          limit: Number(options.limit),
-          provider: options.provider,
-        });
+        console.log(options);
       })
   );
 
-debugCLI('Parsing command line arguments');
 program.parse();

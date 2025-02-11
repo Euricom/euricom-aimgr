@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 
-// TODO: don't use esbuild-register for production run
-// TODO: use tsx for debug start, build and use ./dist/index.js for prod.
-
-require("esbuild-register");
-require("../src/index.ts");
+if ('development' === process.env.NODE_ENV) {
+  // In development, we'll let the dev script handle it
+  console.error('Please use "pnpm dev" for development mode');
+  process.exit(1);
+} else {
+  // Use compiled version for production
+  require('../dist/index.js');
+}

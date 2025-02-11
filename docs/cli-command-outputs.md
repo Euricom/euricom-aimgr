@@ -4,34 +4,24 @@
 
 ### user add
 
-```code
-$ aimgr user add --email john.doe@euri.com --name "John Doe" --provider openai,anthropic
+```bash
+$ aimgr user add --email john.doe@euri.com --name "John Doe" --provider openai,openrouter
 
-✓ User created successfully: John Doe (john.doe@euri.com) 
+✓ User created successfully: John Doe (john.doe@euri.com)
 
+Provider List (john.doe@euri.com):
 
-TODO: review this output
+| Provider   | ApiKey (name) | ApiKey (value)    | Credits ($/Month)   |
+|------------|---------------|-------------------|---------------------|
+| openrouter | api-key-2     | sk-1234567890     | 0.25 of 10          |
 
-| Provider   | API Keys          | Value              | Credits        |
-| ---------- | ----------------- | ------------------ | -------------- |
-| OpenAI     | Cursor            | xxxxxxxxxxxxxxxxxx | $0.1 of $5.0/m |
-| Anthropic  | Default           | xxxxxxxxxxxxxxxxxx | $1.5 of $5.0/m |
-| OpenRouter | john.doe@euri.com | xxxxxxxxxxxxxxxxxx | $5.2 of $10    |
+________________________________________________________________________________
 
-TODO: Example for no keys (disabled, removed)
+"ALTERNATIVE" (if no api key is provided):
 
-| Provider | API Keys | Value | Credits |
-| -------- | -------- | ----- | ------- |
-| -        | -        | -     | -       |
-
-User Details:
-┌──────────────────┬──────────────────────┐
-│ Email            │ john.doe@euri.com    │
-├──────────────────┼──────────────────────┤
-│ Name             │ John Doe             │
-├──────────────────┼──────────────────────┤
-│ Active Providers │ openai, anthropic    │
-└──────────────────┴──────────────────────┘
+| Provider   | ApiKey (name) | ApiKey (value)    | Credits ($/Month)   |
+|------------|---------------|-------------------|---------------------|
+|            |               |                   |                     |
 ```
 
 ### user list
@@ -39,23 +29,13 @@ User Details:
 ```bash
 $ aimgr user list
 
-Users:
-┌────────────────────┬────────────┬───────────────────────┬─────────┐
-│ Email              │ Name       │ Providers             │ Status  │
-├────────────────────┼────────────┼───────────────────────┼─────────┤
-│ john.doe@euri.com  │ John Doe   │ openai, anthropic     │ Active  │
-│ jane.doe@euri.com  │ Jane Doe   │ openai                │ Active  │
-│ bob.smith@euri.com │ Bob Smith  │ anthropic, openrouter │ Active  │
-└────────────────────┴────────────┴───────────────────────┴─────────┘
+User List:
 
-$ aimgr user list --filter john
-
-Users:
-┌────────────────────┬────────────┬───────────────────┬─────────┐
-│ Email              │ Name       │ Providers         │ Status  │
-├────────────────────┼────────────┼───────────────────┼─────────┤
-│ john.doe@euri.com  │ John Doe   │ openai, anthropic │ Active  │
-└────────────────────┴────────────┴───────────────────┴─────────┘
+| Email              | Name       | Providers                |
+|--------------------|------------|--------------------------|
+| john.doe@euri.com  | John Doe   | (2) openai, anthropic    |
+| jane.doe@euri.com  | Jane Doe   | (1) openai               |
+| bob.smith@euri.com | Bob Smith  | (2) anthropic, openrouter|
 ```
 
 ### user info
@@ -63,24 +43,20 @@ Users:
 ```bash
 $ aimgr user info john.doe@euri.com
 
-TODO: idem as user create
+User Info:
 
-User Details:
-┌──────────────┬──────────────────────┐
-│ Email        │ john.doe@euri.com    │
-├──────────────┼──────────────────────┤
-│ Name         │ John Doe             │
-├──────────────┼──────────────────────┤
-│ Status       │ Active               │
-└──────────────┴──────────────────────┘
+| Email              | Name       | Providers                         |
+|--------------------|------------|-----------------------------------|
+| john.doe@euri.com  | John Doe   | (3) openrouter, openai, anthropic |
 
-Provider Details:
-┌───────────┬──────────┬───────────────┬────────────────┐
-│ Provider  │ Status   │ Credit Limit  │ Credits Used   │
-├───────────┼──────────┼───────────────┼────────────────┤
-│ openai    │ Active   │ 1000          │ 250            │
-│ anthropic │ Active   │ 500           │ 100            │
-└───────────┴──────────┴───────────────┴────────────────┘
+Provider List (john.doe@euri.com):
+
+| Provider   | ApiKey (name) | ApiKey (value)    | Credits ($/Month)   |
+|------------|---------------|-------------------|---------------------|
+| openrouter | api-key-2     | sk-1234567890     | 0.25 of 10          |
+| openrouter | api-key-1     | sk-1519959890     | 0.25 of 10          |
+| anthropic  | api-key-1     | sk-5919159181     | 0.25 of 10          |
+| openai     | api-key-1     | sk-1236527832     | 0.25 of 10          |
 ```
 
 ### user remove
@@ -88,17 +64,21 @@ Provider Details:
 ```bash
 $ aimgr user remove john.doe@euri.com --provider openai
 
-✓ Provider removed successfully
+✓ Provider "openai" removed successfully from "john.doe@euri.com"
 
-TODO: idem as user create, info
+User Info:
 
+| Email              | Name       | Providers                   |
+|--------------------|------------|-----------------------------|
+| john.doe@euri.com  | John Doe   | (2) openrouter, anthropic   |
 
-Updated Provider List:
-┌───────────┬──────────┐
-│ Provider  │ Status   │
-├───────────┼──────────┤
-│ anthropic │ Active   │
-└───────────┴──────────┘
+Provider List (john.doe@euri.com):
+
+| Provider   | ApiKey (name) | ApiKey (value)    | Credits ($/Month)   |
+|------------|---------------|-------------------|---------------------|
+| openrouter | api-key-2     | sk-1234567890     | 0.25 of 10          |
+| openrouter | api-key-1     | sk-1519959890     | 0.25 of 10          |
+| anthropic  | api-key-1     | sk-5919159181     | 0.25 of 10          |
 ```
 
 ### user add-key
@@ -106,33 +86,33 @@ Updated Provider List:
 ```bash
 $ aimgr user add-key john.doe@euri.com --provider openai
 
-✓ API key added successfully
+✓ API key (openai) added successfully to "john.doe@euri.com"
 
-TODO: idem as user create, info
+Provider List (john.doe@euri.com):
 
-Provider Status:
-┌───────────┬──────────┬────────────────┐
-│ Provider  │ Status   │ Last Updated   │
-├───────────┼──────────┼────────────────┤
-│ openai    │ Active   │ Just now       │
-└───────────┴──────────┴────────────────┘
+| Provider   | ApiKey (name) | ApiKey (value)    | Credits ($/Month)   |
+|------------|---------------|-------------------|---------------------|
+| openrouter | api-key-2     | sk-1234567890     | 0.25 of 10          |
+| openrouter | api-key-1     | sk-1519959890     | 0.25 of 10          |
+| anthropic  | api-key-1     | sk-5919159181     | 0.25 of 10          |
+| openai     | api-key-1     | sk-1236527832     | 0.00 of 10          |
 ```
 
 ### user set-limit
 
 ```bash
-$ aimgr user set-limit john.doe@euri.com --provider openai --limit 1000
+$ aimgr user set-limit john.doe@euri.com --provider openai --limit 100
 
-✓ Credit limit updated successfully
+✓ Credit limit (openai) updated successfully for "john.doe@euri.com"
 
-TODO: idem as user create, info
+Provider List (john.doe@euri.com):
 
-Updated Provider:
-┌───────────┬──────────┬───────────────┬────────────────┐
-│ Provider  │ Status   │ Credit Limit  │ Credits Used   │
-├───────────┼──────────┼───────────────┼────────────────┤
-│ openai    │ Active   │ 1000          │ 250            │
-└───────────┴──────────┴───────────────┴────────────────┘
+| Provider   | ApiKey (name) | ApiKey (value)    | Credits ($/Month)   |
+|------------|---------------|-------------------|---------------------|
+| openrouter | api-key-2     | sk-1234567890     | 0.25 of 10          |
+| openrouter | api-key-1     | sk-1519959890     | 0.25 of 10          |
+| anthropic  | api-key-1     | sk-5919159181     | 0.25 of 10          |
+| openai     | api-key-1     | sk-1236527832     | 0.00 of 100         |
 ```
 
 ## Provider Management Commands
@@ -142,31 +122,19 @@ Updated Provider:
 ```bash
 $ aimgr provider list
 
-TODO: active user is not mandatory
-
 Available Providers:
-┌────────────┬────────────────┬─────────────────┐
-│ Provider   │ Default Limit  │ Active Users    │
-├────────────┼────────────────┼─────────────────┤
-│ openai     │ 1000           │ 15              │
-│ anthropic  │ 500            │ 8               │
-│ openrouter │ 200            │ 3               │
-└────────────┴────────────────┴─────────────────┘
+
+| Provider   | Total Credits ($/Month)  |
+|------------|--------------------------|
+| openai     | 0.50 of 100              |
+| anthropic  | 35.00 of 100             |
+| openrouter | 15.25 of 100             |
 ```
 
 ### provider set-limit
 
 ```bash
-$ aimgr provider set-limit --provider openai --limit 1000
+$ aimgr provider set-limit --provider openai --limit 500
 
-✓ Provider limit updated successfully
-
-TODO: active user is not mandatory, output idem as provider list
-
-Updated Provider:
-┌────────────┬────────────────┬─────────────────┐
-│ Provider   │ Default Limit  │ Affected Users  │
-├────────────┼────────────────┼─────────────────┤
-│ openai     │ 1000           │ 15              │
-└────────────┴────────────────┴─────────────────┘
+✓ Provider limit (openai) updated successfully for all users
 ```

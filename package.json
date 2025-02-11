@@ -4,13 +4,14 @@
   "description": "CLI tool for API key and user management",
   "main": "dist/index.js",
   "bin": {
-    "aimgr": "./dist/index.js"
+    "aimgr": "./bin/aimgr.js"
   },
   "scripts": {
     "build": "tsup",
     "build:watch": "tsup --watch",
-    "start": "node dist/index.js",
+    "start": "node bin/aimgr.js",
     "dev": "tsx src/index.ts",
+    "dev:debug": "cross-env DEBUG=aimgr:* tsx src/index.ts",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "clean": "rimraf dist",
@@ -21,10 +22,10 @@
   },
   "dependencies": {
     "@commander-js/extra-typings": "^11.1.0",
-    "better-console": "^1.0.1",
     "cli-spinners": "^2.9.2",
     "cli-table3": "^0.6.5",
     "commander": "^11.1.0",
+    "consola": "^3.4.0",
     "cspell": "^8.17.3",
     "debug": "^4.3.4",
     "dotenv": "^16.0.3",
@@ -36,6 +37,7 @@
   "devDependencies": {
     "@types/debug": "^4.1.12",
     "@types/node": "^20.0.0",
+    "cross-env": "^7.0.3",
     "esbuild-register": "^3.6.0",
     "oxlint": "^0.15.10",
     "prettier": "^3.2.0",
