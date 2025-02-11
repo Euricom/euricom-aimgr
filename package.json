@@ -4,20 +4,29 @@
   "description": "CLI tool for API key and user management",
   "main": "dist/index.js",
   "bin": {
-    "aimgr": "bin/aimgr.js"
+    "aimgr": "./dist/index.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsup",
+    "build:watch": "tsup --watch",
     "start": "node dist/index.js",
-    "dev": "tsx src/index.ts"
+    "dev": "tsx src/index.ts",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "clean": "rimraf dist",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,md}\"",
+    "spell": "cspell \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "spell:fix": "cspell \"**/*.{ts,tsx,js,jsx,json,md}\" --fix"
   },
   "dependencies": {
     "@commander-js/extra-typings": "^11.1.0",
-    "@types/commander": "^2.12.2",
+    "better-console": "^1.0.1",
     "cli-spinners": "^2.9.2",
     "cli-table3": "^0.6.5",
     "commander": "^11.1.0",
     "cspell": "^8.17.3",
+    "debug": "^4.3.4",
     "dotenv": "^16.0.3",
     "inquirer": "^12.4.1",
     "openai": "^4.28.0",
@@ -25,10 +34,18 @@
     "pnpm": "^10.2.1"
   },
   "devDependencies": {
+    "@types/debug": "^4.1.12",
     "@types/node": "^20.0.0",
     "esbuild-register": "^3.6.0",
+    "oxlint": "^0.15.10",
+    "prettier": "^3.2.0",
+    "rimraf": "^5.0.0",
     "tsup": "^8.3.6",
     "tsx": "^4.7.0",
     "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18",
+    "pnpm": ">=10.0.0"
   }
 }

@@ -14,6 +14,12 @@ export interface Provider {
   project?: Project;
 }
 
+export interface ApiKey {
+  key: string;
+  providerName: string;
+  createdAt: Date;
+}
+
 export interface Project {
   id: string;
   name: string;
