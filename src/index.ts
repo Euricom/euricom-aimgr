@@ -49,23 +49,31 @@ const commandHandlers = {
     debugCmd('disableUser command called with options: %O', options);
     // TODO: Implement disableUser logic
   },
-  exit: () => {},
+  exit: () => {
+    debugCmd('exit command called');
+  },
   listProviders: async () => {
+    debugCmd('listProviders command called');
     // TODO: Implement listProviders logic
   },
   listUsers: async (options: CommandOptions['listUsers']) => {
+    debugCmd('listUsers command called with options: %O', options);
     console.log('listUsers', options);
   },
   removeUser: async (options: CommandOptions['removeUser']) => {
+    debugCmd('removeUser command called with options: %O', options);
     // TODO: Implement removeUser logic
   },
   setLimit: async (options: CommandOptions['setLimit']) => {
+    debugCmd('setLimit command called with options: %O', options);
     // TODO: Implement setLimit logic
   },
   setLimitProviders: async (options: CommandOptions['setLimitProviders']) => {
+    debugCmd('setLimitProviders command called with options: %O', options);
     // TODO: Implement setLimitProviders logic
   },
   userDetails: async (options: CommandOptions['userDetails']) => {
+    debugCmd('userDetails command called with options: %O', options);
     // TODO: Implement userDetails logic
   },
 } as const;
