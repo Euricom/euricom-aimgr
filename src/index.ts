@@ -3,6 +3,7 @@
 import debug from 'debug';
 import dotenv from 'dotenv';
 import { validateEnvironment } from './utils/environment';
+import { logger } from './utils/logger';
 
 // Validate environment before any other initialization
 validateEnvironment();
@@ -25,16 +26,16 @@ program
 
 debugCLI('CLI initialized');
 
-type CommandOptions = {
+interface CommandOptions {
   addKey: { email: string; provider: string };
   createUser: { email: string; name: string; provider?: string };
   disableUser: { email: string };
   listUsers: { filter?: string };
   removeUser: { email: string; provider?: string };
-  setLimit: { email: string; provider: string; limit: number };
-  setLimitProviders: { provider: string; limit: number };
+  setLimit: { email: string; limit: number; provider: string };
+  setLimitProviders: { limit: number; provider: string };
   userDetails: { email: string };
-};
+}
 
 const commandHandlers = {
   addKey: async (options: CommandOptions['addKey']) => {
@@ -58,7 +59,7 @@ const commandHandlers = {
   },
   listUsers: async (options: CommandOptions['listUsers']) => {
     debugCmd('listUsers command called with options: %O', options);
-    console.log('listUsers', options);
+    logger.log('listUsers', options);
   },
   removeUser: async (options: CommandOptions['removeUser']) => {
     debugCmd('removeUser command called with options: %O', options);
@@ -110,7 +111,7 @@ program
       .description('Show detailed user info')
       .argument('<email>', "User's email address")
       .action(async email => {
-        commandHandlers.userDetails(email);
+        commandHandlers.userDetails({ email });
       })
   )
   .addCommand(
@@ -151,7 +152,8 @@ program
       .requiredOption('-l, --limit <limit>', 'Credit limit')
       .action(async (email, options) => {
         commandHandlers.setLimit({
-          limit: options.limit,
+          email,
+          limit: Number(options.limit),
           provider: options.provider,
         });
       })
@@ -183,7 +185,10 @@ program
       )
       .requiredOption('-l, --limit <limit>', 'Credit limit')
       .action(async options => {
-        commandHandlers.setLimitProviders(options);
+        commandHandlers.setLimitProviders({
+          limit: Number(options.limit),
+          provider: options.provider,
+        });
       })
   );
 
