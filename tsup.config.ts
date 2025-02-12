@@ -1,15 +1,15 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
+  clean: true,
+  dts: true,
   entry: ['src/index.ts'],
   format: ['cjs', 'esm'],
-  dts: true,
-  splitting: false,
-  sourcemap: true,
-  clean: true,
   minify: true,
-  target: 'node18',
   noExternal: ['better-console', 'cli-spinners', 'cli-table3', 'picocolors'],
   shims: true,
+  sourcemap: true,
+  splitting: false,
+  target: 'node18',
   treeshake: true,
 });
