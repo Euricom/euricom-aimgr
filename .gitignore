@@ -40,8 +40,6 @@ data/
 .cache/
 .temp/
 
-# Services
-src/services
 
 # Local development
 .npmrc
