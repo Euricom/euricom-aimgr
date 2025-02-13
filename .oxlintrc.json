@@ -14,7 +14,9 @@
   "rules": {
     "eqeqeq": "error",
     "no-unused-vars": "warn",
-    "no-console": "warn"
+    "no-console": "warn",
+    "sort-keys": "off"  ,
+    "no-magic-numbers": "off"
   },
   "ignorePatterns": [
     "node_modules/**",

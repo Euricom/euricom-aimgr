@@ -2,6 +2,7 @@
   "version": "0.2",
   "language": "en",
   "words": [
+    "ofetch",
     "aimgr",
     "euricom",
     "openai",
@@ -22,7 +23,9 @@
     "coverage/**",
     ".git/**",
     "pnpm-lock.yaml",
-    "*.log"
+    "*.log",
+    "data/userdata.json",
+    "rules/**"
   ],
   "allowCompoundWords": true,
   "ignoreRegExpList": ["\\(.*\\)", "\\[.*\\]"]

@@ -21,6 +21,7 @@
     "spell:fix": "cspell \"**/*.{ts,tsx,js,jsx,json,md}\" --fix"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.36.3",
     "@commander-js/extra-typings": "^11.1.0",
     "cli-spinners": "^2.9.2",
     "cli-table3": "^0.6.5",
@@ -30,7 +31,8 @@
     "debug": "^4.3.4",
     "dotenv": "^16.0.3",
     "inquirer": "^12.4.1",
-    "openai": "^4.28.0",
+    "ofetch": "^1.4.1",
+    "openai": "^4.83.0",
     "picocolors": "^1.1.1",
     "pnpm": "^10.2.1"
   },
