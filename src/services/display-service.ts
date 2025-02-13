@@ -3,6 +3,9 @@ import { consola } from 'consola';
 import pc from 'picocolors';
 import { UserData } from '../providers/base-provider';
 
+// TODO: display serv is too complex, can be simplified
+// has multiple responcibilities
+
 export class DisplayService {
   static displayUserInfo(userData: UserData) {
     consola.info(`User Information for ${pc.blue(userData.email)}`);

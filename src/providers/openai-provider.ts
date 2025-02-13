@@ -66,9 +66,11 @@ export class OpenAIProvider extends BaseProvider {
       const projects = projectsResponse.data;
 
       // 2. Get users for each project
+      // TODO: only use Map when it simplifies the code, probably not in the case
       const userMap = new Map<string, { name: string; email: string; projects: string[] }>();
 
       for (const project of projects) {
+        // TODO: handle parallel requests (promise.all)
         const projectUsersResponse = await ofetch<OpenAIListResponse<OpenAIProjectUser>>(
           `/organization/projects/${project.id}/users`,
           {
@@ -104,6 +106,7 @@ export class OpenAIProvider extends BaseProvider {
         ],
       }));
     } catch (error) {
+      // TODO: log error only on top level
       consola.error('Error fetching OpenAI users:', error);
       throw error;
     }

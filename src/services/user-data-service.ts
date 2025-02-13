@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { UserData } from '../providers/base-provider';
 
+// TODO: most js is not about classes, but about function
 export class UserDataService {
   private static readonly dataDir = path.join(process.cwd(), 'data');
   private static readonly dataFile = path.join(this.dataDir, 'userdata.json');
@@ -46,6 +47,7 @@ export class UserDataService {
 
       await fs.writeFile(UserDataService.dataFile, JSON.stringify(users, undefined, 2), 'utf8');
     } catch (error) {
+      // TODO: only top level error handling
       consola.error('Error saving user data:', error);
       throw error;
     }
@@ -54,12 +56,15 @@ export class UserDataService {
   /**
    * Merge and save user data from multiple providers
    */
+
+  // TODO: not the responsibility of the user service (is business logic)
   static async mergeAndSave(newUsers: UserData[]): Promise<void> {
     try {
       const existingUsers = await this.load();
       const mergedUsers = this.merge(existingUsers, newUsers);
       await this.save(mergedUsers);
     } catch (error) {
+      // TODO: only top level error handling
       consola.error('Error in mergeAndSave:', error);
       throw error;
     }

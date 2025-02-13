@@ -1,3 +1,6 @@
+// TODO: just user, ApiKey, Provider, User
+// 'Data' is a bit of a misnomer
+
 export interface ApiKeyData {
   value: string;
   name: string;
@@ -16,6 +19,8 @@ export interface UserData {
   name: string;
   providers: ProviderData[];
 }
+
+// TODO: why the interface when you have an abstract class?
 
 // Split the BaseProvider into more focused interfaces
 export interface IUserProvider {

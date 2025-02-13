@@ -5,7 +5,11 @@ import { OpenAIProvider } from './openai-provider';
 
 export type ProviderType = 'openai' | 'anthropic';
 
+// TODO: factory is overly complex, can be simplified
+
 // Simple factory following Single Responsibility Principle
+
+// TODO: don't use class when you only have static methods
 export class ProviderFactory {
   private static providers = new Map<string, BaseProvider>();
   private static registry = new Map<ProviderType, new (apiKey: string) => BaseProvider>([
@@ -31,6 +35,7 @@ export class ProviderFactory {
     return this.providers.get(providerKey)!;
   }
 
+  // TODO: not a responsibility of the factory
   static async fetchUsersFromProvider(provider: BaseProvider): Promise<UserData[]> {
     try {
       const users = await provider.fetchUsers();
@@ -42,6 +47,7 @@ export class ProviderFactory {
     }
   }
 
+  // TODO: not a responsibility of the factory
   static getSupportedProviders(): ProviderType[] {
     return Array.from(this.registry.keys());
   }

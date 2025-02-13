@@ -1,5 +1,7 @@
 import cliSpinners from 'cli-spinners';
 
+// TODO: what???
+
 export class LoadingService {
   private static interval: NodeJS.Timeout | null = null;
   private static currentFrame = 0;

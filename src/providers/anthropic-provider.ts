@@ -45,6 +45,8 @@ export class AnthropicProvider extends BaseProvider {
 
   constructor(apiKey: string) {
     super(apiKey);
+
+    // TODO: better to create Anthropic API client and use that
     this.headers = {
       'x-api-key': apiKey,
       'anthropic-version': '2023-06-01', // Use appropriate version
@@ -112,6 +114,7 @@ export class AnthropicProvider extends BaseProvider {
         ],
       }));
     } catch (error) {
+      // TODO: log error only on top level
       consola.error('Error fetching Anthropic users:', error);
       throw error;
     }
