@@ -6,7 +6,7 @@ interface ProjectDto {
   object: 'organization.project';
   name: string;
   created_at: number;
-  archived_at: number | null;
+  archived_at?: number;
   status: 'active' | 'archived';
 }
 
