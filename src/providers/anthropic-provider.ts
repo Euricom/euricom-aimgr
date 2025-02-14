@@ -1,29 +1,24 @@
-import consola from 'consola';
 import { ofetch } from 'ofetch';
-import { BaseProvider, ProviderData, UserData } from './base-provider';
+import { AIProvider, Provider, User } from './ai-provider';
 
 // Anthropic API response types
-interface AnthropicWorkspace {
+interface WorkspaceDto {
   id: string;
   type: 'workspace';
   name: string;
   created_at: string;
-  archived_at: string | null;
+  archived_at?: string;
   display_color: string;
 }
 
-interface AnthropicWorkspaceMember {
+interface WorkspaceMemberDto {
   type: 'workspace_member';
   user_id: string;
   workspace_id: string;
-  workspace_role:
-    | 'workspace_user'
-    | 'workspace_developer'
-    | 'workspace_admin'
-    | 'workspace_billing';
+  workspace_role: 'workspace_user' | 'workspace_developer' | 'workspace_admin' | 'workspace_billing';
 }
 
-interface AnthropicUser {
+interface UserDto {
   id: string;
   type: 'user';
   email: string;
@@ -32,32 +27,46 @@ interface AnthropicUser {
   added_at: string;
 }
 
-interface AnthropicListResponse<T> {
+interface ListDto<T> {
   data: T[];
   has_more: boolean;
-  first_id: string | null;
-  last_id: string | null;
+  first_id?: string;
+  last_id?: string;
 }
 
-export class AnthropicProvider extends BaseProvider {
-  private readonly baseUrl = 'https://api.anthropic.com/v1/organizations';
-  private readonly headers: Record<string, string>;
+class AnthropicClient {
+  private baseURL = 'https://api.anthropic.com/v1/organizations';
 
-  constructor(apiKey: string) {
-    super(apiKey);
+  constructor(private apiKey: string) {}
 
-    // TODO: better to create Anthropic API client and use that
-    this.headers = {
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01', // Use appropriate version
-    };
+  get<T>(url: string) {
+    return ofetch<T>(url, {
+      baseURL: this.baseURL,
+      headers: {
+        'x-api-key': this.apiKey,
+        'content-type': 'application/json',
+        'anthropic-version': '2023-06-01',
+      },
+    });
+  }
+}
+
+export class AnthropicProvider extends AIProvider {
+  private client: AnthropicClient;
+
+  constructor() {
+    super();
+    if (!process.env.ANTHROPIC_ADMIN_KEY) {
+      throw new Error('ANTHROPIC_ADMIN_KEY is not set');
+    }
+    this.client = new AnthropicClient(process.env.ANTHROPIC_ADMIN_KEY);
   }
 
   getName(): string {
     return 'anthropic';
   }
 
-  async fetchUserInfo(email: string): Promise<ProviderData> {
+  async fetchUserInfo(email: string): Promise<Provider> {
     // Implementation for single user info - can be added later
     return {
       name: this.getName(),
@@ -67,56 +76,38 @@ export class AnthropicProvider extends BaseProvider {
     };
   }
 
-  async fetchUsers(): Promise<UserData[]> {
-    try {
-      // 1. Get all workspaces
-      const workspacesResponse = await ofetch<AnthropicListResponse<AnthropicWorkspace>>(
-        '/workspaces',
+  async fetchUsers(): Promise<User[]> {
+    // 1. Get all workspaces
+    const workspacesResponse = await this.client.get<ListDto<WorkspaceDto>>('/workspaces');
+
+    // 2. Get all workspace members in parallel
+    const memberResponses = await Promise.all(
+      workspacesResponse.data.map(workspace =>
+        this.client.get<ListDto<WorkspaceMemberDto>>(`/workspaces/${workspace.id}/members`)
+      )
+    );
+
+    // 3. Collect all user IDs
+    const userIds = new Set<string>(memberResponses.flatMap(response => response.data.map(member => member.user_id)));
+
+    // 4. Get user details for all workspace members
+    const usersResponse = await this.client.get<ListDto<UserDto>>('/users');
+
+    // 5. Filter users to only those who are workspace members
+    const activeUsers = usersResponse.data.filter(user => userIds.has(user.id));
+
+    // 6. Map to UserData format
+    return activeUsers.map(user => ({
+      email: user.email,
+      name: user.name,
+      providers: [
         {
-          baseURL: this.baseUrl,
-          headers: this.headers,
-        }
-      );
-
-      // 2. Get all workspace members
-      const userIds = new Set<string>();
-      for (const workspace of workspacesResponse.data) {
-        const membersResponse = await ofetch<AnthropicListResponse<AnthropicWorkspaceMember>>(
-          `/workspaces/${workspace.id}/members`,
-          {
-            baseURL: this.baseUrl,
-            headers: this.headers,
-          }
-        );
-        membersResponse.data.forEach(member => userIds.add(member.user_id));
-      }
-
-      // 3. Get user details for all workspace members
-      const usersResponse = await ofetch<AnthropicListResponse<AnthropicUser>>('/users', {
-        baseURL: this.baseUrl,
-        headers: this.headers,
-      });
-
-      // 4. Filter users to only those who are workspace members
-      const activeUsers = usersResponse.data.filter(user => userIds.has(user.id));
-
-      // 5. Map to UserData format
-      return activeUsers.map(user => ({
-        email: user.email,
-        name: user.name,
-        providers: [
-          {
-            name: this.getName(),
-            creditsLimit: 0,
-            creditsUsed: 0,
-            apiKeys: [],
-          },
-        ],
-      }));
-    } catch (error) {
-      // TODO: log error only on top level
-      consola.error('Error fetching Anthropic users:', error);
-      throw error;
-    }
+          name: this.getName(),
+          creditsLimit: 0,
+          creditsUsed: 0,
+          apiKeys: [],
+        },
+      ],
+    }));
   }
 }

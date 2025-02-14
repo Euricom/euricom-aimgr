@@ -1,8 +1,7 @@
-import consola from 'consola';
 import { ofetch } from 'ofetch';
-import { BaseProvider, ProviderData, UserData } from './base-provider';
+import { AIProvider, Provider, User } from './ai-provider';
 
-interface OpenAIProject {
+interface ProjectDto {
   id: string;
   object: 'organization.project';
   name: string;
@@ -11,7 +10,7 @@ interface OpenAIProject {
   status: 'active' | 'archived';
 }
 
-interface OpenAIProjectUser {
+interface ProjectUserDto {
   object: 'organization.project.user';
   id: string;
   name: string;
@@ -20,7 +19,7 @@ interface OpenAIProjectUser {
   added_at: number;
 }
 
-interface OpenAIListResponse<T> {
+interface ListDto<T> {
   object: 'list';
   data: T[];
   first_id: string;
@@ -28,23 +27,38 @@ interface OpenAIListResponse<T> {
   has_more: boolean;
 }
 
-export class OpenAIProvider extends BaseProvider {
-  private readonly baseUrl = 'https://api.openai.com/v1';
-  private readonly headers: Record<string, string>;
+class OpenAIClient {
+  private baseURL = 'https://api.openai.com/v1/organization';
 
-  constructor(apiKey: string) {
-    super(apiKey);
-    this.headers = {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    };
+  constructor(private apiKey: string) {}
+
+  get<T>(url: string) {
+    return ofetch<T>(url, {
+      baseURL: this.baseURL,
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+  }
+}
+
+export class OpenAIProvider extends AIProvider {
+  private client: OpenAIClient;
+
+  constructor() {
+    super();
+    if (!process.env.OPENAI_ADMIN_KEY) {
+      throw new Error('OPENAI_ADMIN_KEY is not set');
+    }
+    this.client = new OpenAIClient(process.env.OPENAI_ADMIN_KEY);
   }
 
   getName(): string {
     return 'openai';
   }
 
-  async fetchUserInfo(email: string): Promise<ProviderData> {
+  async fetchUserInfo(email: string): Promise<Provider> {
     return {
       name: this.getName(),
       creditsLimit: 0,
@@ -53,62 +67,44 @@ export class OpenAIProvider extends BaseProvider {
     };
   }
 
-  async fetchUsers(): Promise<UserData[]> {
-    try {
-      // 1. Get all projects
-      const projectsResponse = await ofetch<OpenAIListResponse<OpenAIProject>>(
-        '/organization/projects',
-        {
-          baseURL: this.baseUrl,
-          headers: this.headers,
-        }
-      );
-      const projects = projectsResponse.data;
+  async fetchUsers(): Promise<User[]> {
+    // 1. Get all projects
+    const projectsResponse = await this.client.get<ListDto<ProjectDto>>('/projects');
 
-      // 2. Get users for each project
-      // TODO: only use Map when it simplifies the code, probably not in the case
-      const userMap = new Map<string, { name: string; email: string; projects: string[] }>();
+    // 2. Get users for each project in parallel
+    const users: { name: string; email: string; projects: string[] }[] = [];
 
-      for (const project of projects) {
-        // TODO: handle parallel requests (promise.all)
-        const projectUsersResponse = await ofetch<OpenAIListResponse<OpenAIProjectUser>>(
-          `/organization/projects/${project.id}/users`,
-          {
-            baseURL: this.baseUrl,
-            headers: this.headers,
-          }
-        );
+    await Promise.all(
+      projectsResponse.data.map(async project => {
+        const projectUsersResponse = await this.client.get<ListDto<ProjectUserDto>>(`/projects/${project.id}/users`);
 
         projectUsersResponse.data.forEach(user => {
-          if (!userMap.has(user.email)) {
-            userMap.set(user.email, {
+          const existingUser = users.find(u => u.email === user.email);
+          if (existingUser) {
+            existingUser.projects.push(project.name);
+          } else {
+            users.push({
               name: user.name,
               email: user.email,
               projects: [project.name],
             });
-          } else {
-            userMap.get(user.email)?.projects.push(project.name);
           }
         });
-      }
+      })
+    );
 
-      // 3. Convert to UserData format
-      return [...userMap.values()].map(user => ({
-        email: user.email,
-        name: user.name,
-        providers: [
-          {
-            name: this.getName(),
-            creditsLimit: 0,
-            creditsUsed: 0,
-            apiKeys: [],
-          },
-        ],
-      }));
-    } catch (error) {
-      // TODO: log error only on top level
-      consola.error('Error fetching OpenAI users:', error);
-      throw error;
-    }
+    // 3. Convert to User format
+    return users.map(user => ({
+      email: user.email,
+      name: user.name,
+      providers: [
+        {
+          name: this.getName(),
+          creditsLimit: 0,
+          creditsUsed: 0,
+          apiKeys: [],
+        },
+      ],
+    }));
   }
 }

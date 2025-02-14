@@ -6,7 +6,7 @@ export default defineConfig({
   entry: ['src/index.ts'],
   format: ['cjs', 'esm'],
   minify: true,
-  noExternal: ['better-console', 'cli-spinners', 'cli-table3', 'picocolors'],
+  noExternal: ['better-console', 'cli-spinners', 'cli-table3', 'picocolors', 'ora'],
   shims: true,
   sourcemap: true,
   splitting: false,

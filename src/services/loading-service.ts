@@ -1,44 +1,18 @@
 import cliSpinners from 'cli-spinners';
+import ora from 'ora';
 
-// TODO: what???
+export const LoadingService = {
+  spinner: ora({
+    spinner: cliSpinners.dots,
+    text: 'Loading...',
+  }),
 
-export class LoadingService {
-  private static interval: NodeJS.Timeout | null = null;
-  private static currentFrame = 0;
-  private static spinner = cliSpinners.dots;
+  start(text = 'Loading...') {
+    this.spinner.text = text;
+    this.spinner.start();
+  },
 
-  static start(text: string = 'Loading...') {
-    // Clear any existing spinner
-    this.stop();
-
-    // Get the frames and interval from the spinner
-    const { frames, interval } = this.spinner;
-
-    process.stdout.write('\x1B[?25l'); // Hide cursor
-
-    this.interval = setInterval(() => {
-      // Clear the previous line
-      process.stdout.clearLine(0);
-      process.stdout.cursorTo(0);
-
-      // Write the new frame
-      process.stdout.write(`${frames[this.currentFrame]} ${text}`);
-
-      // Update frame index
-      this.currentFrame = (this.currentFrame + 1) % frames.length;
-    }, interval);
-  }
-
-  static stop() {
-    if (this.interval) {
-      clearInterval(this.interval);
-      this.interval = null;
-      this.currentFrame = 0;
-
-      // Clear the line and reset cursor
-      process.stdout.clearLine(0);
-      process.stdout.cursorTo(0);
-      process.stdout.write('\x1B[?25h'); // Show cursor
-    }
-  }
-}
+  stop() {
+    this.spinner.stop();
+  },
+};
