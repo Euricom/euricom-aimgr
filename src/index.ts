@@ -3,7 +3,9 @@
 import { Command } from '@commander-js/extra-typings';
 import consola from 'consola';
 import dotenv from 'dotenv';
-import { listAction } from './commands/user/list';
+import { listAction } from './commands/user';
+
+// import { env } from './env';
 
 dotenv.config();
 

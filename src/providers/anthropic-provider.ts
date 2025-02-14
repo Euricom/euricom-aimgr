@@ -39,6 +39,7 @@ class AnthropicClient {
 
   constructor(private apiKey: string) {}
 
+  // TODO: improve see code rabbit
   get<T>(url: string) {
     return ofetch<T>(url, {
       baseURL: this.baseURL,
@@ -56,6 +57,7 @@ export class AnthropicProvider extends AIProvider {
 
   constructor() {
     super();
+    // TODO: use type safe env
     if (!process.env.ANTHROPIC_ADMIN_KEY) {
       throw new Error('ANTHROPIC_ADMIN_KEY is not set');
     }

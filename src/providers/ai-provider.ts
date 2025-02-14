@@ -1,21 +1,5 @@
-export interface ApiKey {
-  value: string;
-  name: string;
-  creditsUsed: number;
-}
-
-export interface Provider {
-  name: string;
-  creditsLimit: number;
-  creditsUsed: number;
-  apiKeys: ApiKey[];
-}
-
-export interface User {
-  email: string;
-  name: string;
-  providers: Provider[];
-}
+import { Provider } from '../domain/provider';
+import { User } from '../domain/user';
 
 // Base provider can implement the interfaces it supports
 export abstract class AIProvider {
