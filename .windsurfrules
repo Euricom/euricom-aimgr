@@ -30,8 +30,8 @@ You are an expert in TypeScript, Node.js with a deep understanding of best pract
 
 ## Dependencies and Tools
 - Use `commander` for command-line argument parsing.
-- Use `consola` for improved console logging.
-- Add `debug` for extra debug logging to improve debugging.
+- Use `consola` for improved CLI output.
+- Add `debug` for debug logging.
 
 ## Testing
 - Write unit tests using Vitest.
