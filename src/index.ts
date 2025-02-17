@@ -22,6 +22,7 @@ program
     new Command('list')
       .description('List all registered users')
       .option('-f, --filter <filter>', 'Filter users by email')
+      .option('-s, --sync', 'Force sync with providers')
       .action(listAction)
   )
   .addCommand(

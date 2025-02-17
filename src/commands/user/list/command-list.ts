@@ -1,6 +1,6 @@
-import { mergeUsers } from '@/domain/user';
+import { mergeUsers, User } from '@/domain/user';
 import { createProvider } from '@/providers/ai-provider-factory';
-import { store } from '@/store';
+import * as store from '@/store';
 import { displayTable } from '@/utils/display-table';
 import * as loading from '@/utils/loading';
 
@@ -10,13 +10,13 @@ export async function listAction(options: { filter?: string }) {
   try {
     loading.start('Loading user list...');
 
-    let users = (await store.get('users')) || [];
+    let users = store.get<User[]>('users') || [];
 
     if (users.length === 0) {
       const aiProviders = [createProvider('openai'), createProvider('anthropic')];
       const usersFromProviders = await Promise.all(aiProviders.map(aiProvider => aiProvider.fetchUsers()));
       users = mergeUsers(usersFromProviders);
-      await store.set('users', users);
+      store.set('users', users);
     }
 
     if (options.filter) {

@@ -1,6 +1,6 @@
 import { Provider } from '@/domain/provider';
 import { User } from '@/domain/user';
-import { BaseAPIClient } from '@/lib/http/base-api-client';
+import { BaseAPIClient } from '@/utils/base-api-client';
 import invariant from 'tiny-invariant';
 import { AIProvider } from './ai-provider';
 
