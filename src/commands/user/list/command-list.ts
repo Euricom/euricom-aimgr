@@ -1,8 +1,8 @@
 import { mergeUsers } from '@/domain/user';
 import { createProvider } from '@/providers/ai-provider-factory';
+import { store } from '@/store';
 import { displayTable } from '@/utils/display-table';
 import * as loading from '@/utils/loading';
-import { store } from '@/utils/store';
 
 import consola from 'consola';
 

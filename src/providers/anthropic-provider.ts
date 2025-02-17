@@ -41,7 +41,6 @@ class AnthropicClient extends BaseAPIClient {
   constructor(apiKey: string, version = '2023-06-01') {
     super('https://api.anthropic.com/v1/organizations', {
       'x-api-key': apiKey,
-      'content-type': 'application/json',
       'anthropic-version': version,
     });
   }

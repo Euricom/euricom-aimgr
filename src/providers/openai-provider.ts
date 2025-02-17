@@ -34,7 +34,6 @@ class OpenAIClient extends BaseAPIClient {
   constructor(apiKey: string) {
     super('https://api.openai.com/v1/organization', {
       Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
     });
   }
 }

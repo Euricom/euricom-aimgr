@@ -10,21 +10,12 @@ interface StoreData {
 }
 
 function readStore(): Partial<StoreData> {
-  try {
-    if (!fs.existsSync(STORE_PATH)) return {};
-    return JSON.parse(fs.readFileSync(STORE_PATH, 'utf-8'));
-  } catch (error) {
-    console.error('Failed to read store:', error);
-    return {};
-  }
+  if (!fs.existsSync(STORE_PATH)) return {};
+  return JSON.parse(fs.readFileSync(STORE_PATH, 'utf8'));
 }
 
 function writeStore(data: Partial<StoreData>): void {
-  try {
-    fs.writeFileSync(STORE_PATH, JSON.stringify(data, null, 2));
-  } catch (error) {
-    console.error('Failed to write store:', error);
-  }
+  fs.writeFileSync(STORE_PATH, JSON.stringify(data, undefined, 2));
 }
 
 export const store = {
