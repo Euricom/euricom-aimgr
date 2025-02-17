@@ -1,38 +1,35 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { User } from './domain/user';
 
 const STORE_PATH = path.join(process.cwd(), '.store.json');
 
-// Abstract store interface
-interface IStore {
-  get<T>(key: string): T | undefined;
-  set<T>(key: string, value: T): void;
-  delete(key: string): void;
+interface StoreSchema {
+  users: User[];
+  // New data types can be added here without changing implementation
 }
 
-// Concrete implementation of the store
-class JsonFileStore implements IStore {
-  private readStore(): { [key: string]: unknown } {
+class JsonFileStore {
+  private readStore(): Partial<StoreSchema> {
     if (!fs.existsSync(STORE_PATH)) return {};
     return JSON.parse(fs.readFileSync(STORE_PATH, 'utf8'));
   }
 
-  private writeStore(data: { [key: string]: unknown }): void {
+  private writeStore(data: Partial<StoreSchema>): void {
     fs.writeFileSync(STORE_PATH, JSON.stringify(data, undefined, 2));
   }
 
-  get<T>(key: string): T | undefined {
-    const data = this.readStore();
-    return data[key] as T | undefined;
+  get<K extends keyof StoreSchema>(key: K): StoreSchema[K] | undefined {
+    return this.readStore()[key];
   }
 
-  set<T>(key: string, value: T): void {
+  set<K extends keyof StoreSchema>(key: K, value: StoreSchema[K]): void {
     const data = this.readStore();
     data[key] = value;
     this.writeStore(data);
   }
 
-  delete(key: string): void {
+  delete<K extends keyof StoreSchema>(key: K): void {
     const data = this.readStore();
     delete data[key];
     this.writeStore(data);
@@ -40,4 +37,4 @@ class JsonFileStore implements IStore {
 }
 
 // Create an instance of the store
-export const store: IStore = new JsonFileStore();
+export const store = new JsonFileStore();
