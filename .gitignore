@@ -33,14 +33,13 @@ logs/
 # Testing
 coverage/
 
-# Application data
-data/
-
 # Misc
 .cache/
 .temp/
 
-
 # Local development
 .npmrc
 .node_repl_history
+
+# Store
+.store.json
