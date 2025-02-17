@@ -10,13 +10,13 @@ export async function listAction(options: { filter?: string }) {
   try {
     loading.start('Loading user list...');
 
-    let users = store.get('users') || [];
+    let users = (await store.get('users')) || [];
 
     if (users.length === 0) {
       const aiProviders = [createProvider('openai'), createProvider('anthropic')];
       const usersFromProviders = await Promise.all(aiProviders.map(aiProvider => aiProvider.fetchUsers()));
       users = mergeUsers(usersFromProviders);
-      store.set('users', users);
+      await store.set('users', users);
     }
 
     if (options.filter) {

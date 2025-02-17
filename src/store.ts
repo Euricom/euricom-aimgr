@@ -6,31 +6,33 @@ const STORE_PATH = path.join(process.cwd(), '.store.json');
 
 interface StoreSchema {
   users: User[];
+
   // New data types can be added here without changing implementation
 }
 
 class JsonFileStore {
-  private readStore(): Partial<StoreSchema> {
+  private async readStore(): Promise<Partial<StoreSchema>> {
     if (!fs.existsSync(STORE_PATH)) return {};
-    return JSON.parse(fs.readFileSync(STORE_PATH, 'utf8'));
+    return JSON.parse(await fs.promises.readFile(STORE_PATH, 'utf8'));
   }
 
   private writeStore(data: Partial<StoreSchema>): void {
     fs.writeFileSync(STORE_PATH, JSON.stringify(data, undefined, 2));
   }
 
-  get<K extends keyof StoreSchema>(key: K): StoreSchema[K] | undefined {
-    return this.readStore()[key];
+  async get<K extends keyof StoreSchema>(key: K): Promise<StoreSchema[K] | undefined> {
+    const data = await this.readStore();
+    return data[key];
   }
 
-  set<K extends keyof StoreSchema>(key: K, value: StoreSchema[K]): void {
-    const data = this.readStore();
+  async set<K extends keyof StoreSchema>(key: K, value: StoreSchema[K]): Promise<void> {
+    const data = await this.readStore();
     data[key] = value;
     this.writeStore(data);
   }
 
-  delete<K extends keyof StoreSchema>(key: K): void {
-    const data = this.readStore();
+  async delete<K extends keyof StoreSchema>(key: K): Promise<void> {
+    const data = await this.readStore();
     delete data[key];
     this.writeStore(data);
   }
