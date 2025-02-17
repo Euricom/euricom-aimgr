@@ -17,11 +17,8 @@
     "no-console": "warn",
     "sort-keys": "off",
     "no-magic-numbers": "off",
-    "sort-imports": "off"
+    "sort-imports": "off",
+    "yoda": "off"
   },
-  "ignorePatterns": [
-    "node_modules/**",
-    "dist/**",
-    "build/**"
-  ]
-} 
+  "ignorePatterns": ["node_modules/**", "dist/**", "build/**"]
+}

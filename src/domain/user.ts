@@ -6,20 +6,17 @@ export interface User {
   providers: Provider[];
 }
 
-// TODO: unit test
 export function mergeUsers(users: User[] | User[][]): User[] {
   const items = users.flat();
-  const mergedUsers: User[] = [];
-
-  // TODO: refactor with reduce (maybe better)
-  items.forEach(user => {
-    const existingUser = mergedUsers.find(u => u.email === user.email);
+  const mergedUsers = items.reduce<User[]>((acc, user) => {
+    const existingUser = acc.find(u => u.email === user.email);
     if (existingUser) {
       existingUser.providers.push(...user.providers);
     } else {
-      mergedUsers.push(user);
+      acc.push(user);
     }
-  });
+    return acc;
+  }, []);
 
   return mergedUsers;
 }
