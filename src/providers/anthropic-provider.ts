@@ -1,5 +1,7 @@
+import { Provider } from '@/domain/provider';
+import { User } from '@/domain/user';
 import { ofetch } from 'ofetch';
-import { AIProvider, Provider, User } from './ai-provider';
+import { AIProvider } from './ai-provider';
 
 // Anthropic API response types
 interface WorkspaceDto {

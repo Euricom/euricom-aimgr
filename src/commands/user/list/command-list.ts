@@ -1,14 +1,12 @@
-import consola from 'consola';
-// import { AIProvider, User } from '../../../providers/ai-provider';
-import { createProvider } from '../../../providers/ai-provider-factory';
-// import { LoadingService } from '../../../services/loading-service';
-import { displayTable } from '../../../utils/display-table';
-import * as loading from '@/utils/loading';
 import { mergeUsers } from '@/domain/user';
+import { createProvider } from '@/providers/ai-provider-factory';
+import { displayTable } from '@/utils/display-table';
+import * as loading from '@/utils/loading';
+import consola from 'consola';
 
 export const listAction = async (options: { filter?: string }) => {
   try {
-    loading.start('Loading users...');
+    loading.start('Loading user list...');
 
     const aiProviders = [createProvider('openai'), createProvider('anthropic')];
 
@@ -22,25 +20,15 @@ export const listAction = async (options: { filter?: string }) => {
       users = users.filter(user => user.email.includes(options.filter!));
     }
 
-    // TODO: simplify api
-    displayTable(
-      ['Email', 'Name', 'Providers'],
-      users.map(user => [
-        user.email,
-        user.name,
-        `(${user.providers.length}) ${user.providers.map(p => p.name).join(', ')}`,
-      ])
-    );
+    // Add empty line before the table
+    consola.log('');
 
-    // displayTable(
-    //   ['Email', 'Name', 'Providers'],
-    //   filteredUsers.map(user => {
-    //     return {
-    //       ...user,
-    //       providers: user.providers.map(p => p.name).join(', '),
-    //     };
-    //   })
-    // );
+    displayTable(
+      users.map(user => ({
+        ...user,
+        providers: user.providers.map(p => p.name).join(', '),
+      }))
+    );
 
     //TODO: save to file for backup, save mergedUsers
   } catch (error) {

@@ -15,7 +15,7 @@
     "eqeqeq": "error",
     "no-unused-vars": "warn",
     "no-console": "warn",
-    "sort-keys": "off"  ,
+    "sort-keys": "off",
     "no-magic-numbers": "off",
     "sort-imports": "off"
   },

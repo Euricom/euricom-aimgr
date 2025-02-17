@@ -1,5 +1,5 @@
-import { Provider } from '../domain/provider';
-import { User } from '../domain/user';
+import { Provider } from '@/domain/provider';
+import { User } from '@/domain/user';
 
 // Base provider can implement the interfaces it supports
 export abstract class AIProvider {
