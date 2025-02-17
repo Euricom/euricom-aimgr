@@ -4,7 +4,7 @@ import { displayTable } from '@/utils/display-table';
 import * as loading from '@/utils/loading';
 import consola from 'consola';
 
-export const listAction = async (options: { filter?: string }) => {
+export async function listAction(options: { filter?: string }) {
   try {
     loading.start('Loading user list...');
 
@@ -36,4 +36,4 @@ export const listAction = async (options: { filter?: string }) => {
   } finally {
     loading.stop();
   }
-};
+}

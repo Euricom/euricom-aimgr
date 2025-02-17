@@ -1,6 +1,7 @@
 import { Provider } from '@/domain/provider';
 import { User } from '@/domain/user';
-import { ofetch } from 'ofetch';
+import { BaseAPIClient } from '@/lib/http/base-api-client';
+import invariant from 'tiny-invariant';
 import { AIProvider } from './ai-provider';
 
 interface ProjectDto {
@@ -29,18 +30,11 @@ interface ListDto<T> {
   has_more: boolean;
 }
 
-class OpenAIClient {
-  private baseURL = 'https://api.openai.com/v1/organization';
-
-  constructor(private apiKey: string) {}
-
-  get<T>(url: string) {
-    return ofetch<T>(url, {
-      baseURL: this.baseURL,
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-      },
+class OpenAIClient extends BaseAPIClient {
+  constructor(apiKey: string) {
+    super('https://api.openai.com/v1/organization', {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
     });
   }
 }
@@ -50,9 +44,7 @@ export class OpenAIProvider extends AIProvider {
 
   constructor() {
     super();
-    if (!process.env.OPENAI_ADMIN_KEY) {
-      throw new Error('OPENAI_ADMIN_KEY is not set');
-    }
+    invariant(process.env.OPENAI_ADMIN_KEY, 'OPENAI_ADMIN_KEY is not set');
     this.client = new OpenAIClient(process.env.OPENAI_ADMIN_KEY);
   }
 

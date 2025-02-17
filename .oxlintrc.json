@@ -17,7 +17,8 @@
     "no-console": "warn",
     "sort-keys": "off",
     "no-magic-numbers": "off",
-    "sort-imports": "off"
+    "sort-imports": "off",
+    "func-style": "off"
   },
   "ignorePatterns": [
     "node_modules/**",

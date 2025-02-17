@@ -1,6 +1,7 @@
 import { Provider } from '@/domain/provider';
 import { User } from '@/domain/user';
-import { ofetch } from 'ofetch';
+import { BaseAPIClient } from '@/lib/http/base-api-client';
+import invariant from 'tiny-invariant';
 import { AIProvider } from './ai-provider';
 
 // Anthropic API response types
@@ -36,20 +37,12 @@ interface ListDto<T> {
   last_id?: string;
 }
 
-class AnthropicClient {
-  private baseURL = 'https://api.anthropic.com/v1/organizations';
-
-  constructor(private apiKey: string) {}
-
-  // TODO: improve see code rabbit
-  get<T>(url: string) {
-    return ofetch<T>(url, {
-      baseURL: this.baseURL,
-      headers: {
-        'x-api-key': this.apiKey,
-        'content-type': 'application/json',
-        'anthropic-version': '2023-06-01',
-      },
+class AnthropicClient extends BaseAPIClient {
+  constructor(apiKey: string, version = '2023-06-01') {
+    super('https://api.anthropic.com/v1/organizations', {
+      'x-api-key': apiKey,
+      'content-type': 'application/json',
+      'anthropic-version': version,
     });
   }
 }
@@ -59,10 +52,7 @@ export class AnthropicProvider extends AIProvider {
 
   constructor() {
     super();
-    // TODO: use type safe env
-    if (!process.env.ANTHROPIC_ADMIN_KEY) {
-      throw new Error('ANTHROPIC_ADMIN_KEY is not set');
-    }
+    invariant(process.env.ANTHROPIC_ADMIN_KEY, 'ANTHROPIC_ADMIN_KEY is not set');
     this.client = new AnthropicClient(process.env.ANTHROPIC_ADMIN_KEY);
   }
 
