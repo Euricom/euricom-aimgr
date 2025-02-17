@@ -2,19 +2,20 @@
   "version": "0.2",
   "language": "en",
   "words": [
-    "ofetch",
     "aimgr",
+    "anthropic",
+    "betterconsole",
+    "euri",
     "euricom",
+    "ofetch",
     "openai",
     "openrouter",
-    "anthropic",
-    "pnpm",
-    "tsup",
     "oxlint",
-    "euri",
-    "betterconsole",
     "picocolors",
-    "tsnode"
+    "pnpm",
+    "tsnode",
+    "tsup",
+    "Vitest"
   ],
   "ignorePaths": [
     "node_modules/**",
@@ -24,8 +25,7 @@
     ".git/**",
     "pnpm-lock.yaml",
     "*.log",
-    "data/userdata.json",
-    "rules/**"
+    ".env"
   ],
   "allowCompoundWords": true,
   "ignoreRegExpList": ["\\(.*\\)", "\\[.*\\]"]
