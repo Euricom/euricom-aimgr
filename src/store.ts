@@ -2,6 +2,8 @@ import { User } from '@/domain/user';
 import fs from 'node:fs';
 import path from 'node:path';
 
+// TODO: [open close violation]: refactor so when can store additional data, without changing the interface
+
 const STORE_PATH = path.join(process.cwd(), '.store.json');
 
 interface StoreData {
