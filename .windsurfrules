@@ -15,7 +15,7 @@ You are an expert in TypeScript, Node.js with a deep understanding of best pract
 - Follow the Airbnb TypeScript style guide.
 - Use OXlint linting.
 - Use Prettier for consistent code formatting.
-- Use functional and declarative programming patterns; avoid classes.
+- Prefer functional and declarative programming patterns. Use classes judiciously when they provide clear benefits (e.g., for implementing interfaces, managing complex state, or encapsulating related behavior).
 - Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError).
 - Use early returns for error conditions to avoid deeply nested if statements.
 
