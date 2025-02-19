@@ -3,17 +3,19 @@
   "language": "en",
   "words": [
     "aimgr",
+    "anthropic",
+    "betterconsole",
+    "euri",
     "euricom",
+    "ofetch",
     "openai",
     "openrouter",
-    "anthropic",
-    "pnpm",
-    "tsup",
     "oxlint",
-    "euri",
-    "betterconsole",
     "picocolors",
-    "tsnode"
+    "pnpm",
+    "tsnode",
+    "tsup",
+    "Vitest"
   ],
   "ignorePaths": [
     "node_modules/**",
@@ -22,7 +24,8 @@
     "coverage/**",
     ".git/**",
     "pnpm-lock.yaml",
-    "*.log"
+    "*.log",
+    ".env"
   ],
   "allowCompoundWords": true,
   "ignoreRegExpList": ["\\(.*\\)", "\\[.*\\]"]
