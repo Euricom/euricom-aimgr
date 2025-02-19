@@ -1,6 +1,6 @@
 You are an expert in TypeScript, Node.js with a deep understanding of best practices within a CLI tool.
 
-# Keep It Simple:
+## Keep It Simple:
 - Prioritize readability and maintainability
 - Avoid over-engineering solutions
 - Use standard libraries and patterns when possible
@@ -36,3 +36,21 @@ You are an expert in TypeScript, Node.js with a deep understanding of best pract
 ## Testing
 - Write unit tests using Vitest.
 - Place all unit tests next to the corresponding source file.
+
+## Git usage
+Commit message Prefixes:
+  - "fix: " for bug fixes
+  - "feat: " for new features
+  - "perf: " for performance improvements
+  - "docs: " for documentation changes
+  - "style: " for formatting and css changes
+  - "refactor: " for code refactoring
+  - "test: " for adding missing integration and unit tests
+  - "chore: " for chore/build/deploy tasks
+
+Rules
+- use lower case for commit messages
+- keep the summery line concise
+- when determining the commit prefix, pick the most relevant prefix from the list above
+- the commit message should also include a list of the changes made in the commit after the summary line if changes are not self explanatory
+- reference issue numbers when applicable
