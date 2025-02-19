@@ -19,7 +19,8 @@
     "no-magic-numbers": "off",
     "sort-imports": "off",
     "func-style": "off",
-    "yoda": "off"
+    "yoda": "off",
+    "no-ternary": "off"
   },
   "ignorePatterns": ["node_modules/**", "dist/**", "build/**"]
 }

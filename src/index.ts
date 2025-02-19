@@ -3,7 +3,7 @@
 import { Command } from '@commander-js/extra-typings';
 import consola from 'consola';
 import dotenv from 'dotenv';
-import { listAction } from './commands/user';
+import { infoAction, listAction } from './commands/user';
 
 // import { env } from './env';
 
@@ -21,7 +21,7 @@ program
   .addCommand(
     new Command('list')
       .description('List all registered users')
-      .option('-f, --filter <filter>', 'Filter users by email')
+      .option('-f, --filter <filter>', 'Filter users by name')
       .option('-s, --sync', 'Force sync with providers')
       .action(listAction)
   )
@@ -39,9 +39,7 @@ program
     new Command('info')
       .description('Show detailed user info')
       .argument('<email>', "User's email address")
-      .action(async email => {
-        consola.info('yet to implement', email);
-      })
+      .action(infoAction)
   )
   .addCommand(
     new Command('remove')

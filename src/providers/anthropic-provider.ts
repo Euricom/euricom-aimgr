@@ -1,6 +1,6 @@
-import { Provider } from '@/domain/provider';
 import { User } from '@/domain/user';
 import { BaseAPIClient } from '@/utils/base-api-client';
+import { normalizeEmail, normalizeString } from '@/utils/string-utils';
 import invariant from 'tiny-invariant';
 import { AIProvider } from './ai-provider';
 
@@ -37,6 +37,20 @@ interface ListDto<T> {
   last_id?: string;
 }
 
+interface ApiKeyDto {
+  id: string;
+  type: 'api_key';
+  name: string;
+  workspace_id: string;
+  created_at: string;
+  created_by: {
+    id: string;
+    type: 'user';
+  };
+  partial_key_hint: string;
+  status: 'active' | 'inactive' | 'archived';
+}
+
 class AnthropicClient extends BaseAPIClient {
   constructor(apiKey: string, version = '2023-06-01') {
     super('https://api.anthropic.com/v1/organizations', {
@@ -59,48 +73,64 @@ export class AnthropicProvider extends AIProvider {
     return 'anthropic';
   }
 
-  async fetchUserInfo(email: string): Promise<Provider> {
-    // Implementation for single user info - can be added later
+  async fetchUserInfo(email: string): Promise<User> {
+    // 1. Get all workspaces
+    const workspacesResponse = await this.client.get<ListDto<WorkspaceDto>>('/workspaces?limit=100');
+
+    // 2. Look in the workspaces for a workspace that has a name resembling the email
+    const emailParts = normalizeEmail(email);
+    const userWorkspace = workspacesResponse.data.find(workspace => {
+      const workspaceName = normalizeString(workspace.name);
+      return emailParts.every(part => workspaceName.includes(part));
+    });
+
+    if (!userWorkspace) {
+      return {
+        email,
+        name: '',
+        providers: [],
+      };
+    }
+
+    const apiKeysResponses = await this.client.get<ListDto<ApiKeyDto>>(
+      `/api_keys?limit=100&workspace_id=${userWorkspace.id}&status=active`
+    );
+
+    const apiKeys: ApiKeyDto[] = apiKeysResponses.data;
+
     return {
-      name: this.getName(),
-      creditsLimit: 0,
-      creditsUsed: 0,
-      apiKeys: [],
+      email,
+      name: userWorkspace.name.toLowerCase(), // Assuming name is not available, adjust as needed
+      providers: [
+        {
+          creditsUsed: 0,
+          setLimitUrl: `https://console.anthropic.com/settings/workspaces/${userWorkspace.id}/limits`,
+          name: this.getName(),
+          apiKeys: apiKeys.map(key => ({
+            name: key.name,
+            keyHint: key.partial_key_hint,
+          })),
+        },
+      ],
     };
   }
 
   async fetchUsers(): Promise<User[]> {
     // 1. Get all workspaces
-    const workspacesResponse = await this.client.get<ListDto<WorkspaceDto>>('/workspaces');
+    const workspacesResponse = await this.client.get<ListDto<WorkspaceDto>>('/workspaces?limit=100');
 
-    // 2. Get all workspace members in parallel
-    const memberResponses = await Promise.all(
-      workspacesResponse.data.map(workspace =>
-        this.client.get<ListDto<WorkspaceMemberDto>>(`/workspaces/${workspace.id}/members`)
-      )
-    );
+    // 2. Get all workspaces and use the workspace name to generate the user email & name
+    const users: { name: string; email: string }[] = workspacesResponse.data.map(workspace => ({
+      name: workspace.name.toLowerCase(),
+      email:
+        `${workspace.name.split(' ')[0].toLowerCase()}.${workspace.name.split(' ').slice(1).join('')}`.toLowerCase() +
+        '@euri.com',
+    }));
 
-    // 3. Collect all user IDs
-    const userIds = new Set<string>(memberResponses.flatMap(response => response.data.map(member => member.user_id)));
-
-    // 4. Get user details for all workspace members
-    const usersResponse = await this.client.get<ListDto<UserDto>>('/users');
-
-    // 5. Filter users to only those who are workspace members
-    const activeUsers = usersResponse.data.filter(user => userIds.has(user.id));
-
-    // 6. Map to UserData format
-    return activeUsers.map(user => ({
+    return users.map(user => ({
       email: user.email,
       name: user.name,
-      providers: [
-        {
-          name: this.getName(),
-          creditsLimit: 0,
-          creditsUsed: 0,
-          apiKeys: [],
-        },
-      ],
+      providers: [{ name: this.getName() }],
     }));
   }
 }
