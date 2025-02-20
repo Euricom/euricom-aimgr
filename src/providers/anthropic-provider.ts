@@ -117,4 +117,21 @@ export class AnthropicProvider extends AIProvider {
       providers: [{ name: this.getName() }],
     }));
   }
+
+  async isUserMemberOfProvider(email: string): Promise<boolean> {
+    const workspacesResponse = await this.client.get<ListDto<WorkspaceDto>>('/workspaces?limit=100');
+    return workspacesResponse.data.some(workspace => workspace.name.toLowerCase() === email);
+  }
+
+  async addUser(email: string): Promise<User> {
+    return {
+      email,
+      name: '',
+      providers: [
+        {
+          name: this.getName(),
+        },
+      ],
+    };
+  }
 }

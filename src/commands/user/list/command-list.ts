@@ -5,7 +5,12 @@ import { displayTable } from '@/utils/display-table';
 import * as loading from '@/utils/loading';
 import { consola } from 'consola';
 
-export async function listAction(options: { filter?: string; sync?: boolean }) {
+interface ListOptions {
+  filter?: string;
+  sync?: boolean;
+}
+
+export async function userCommandListAction(options: ListOptions) {
   try {
     loading.start('Loading user list...');
 
@@ -24,6 +29,7 @@ export async function listAction(options: { filter?: string; sync?: boolean }) {
       users = users.filter(user => user.email.toLowerCase().includes(options.filter!.toLowerCase()));
     }
 
+    // Display the user list
     consola.log(`\nUser List (${users.length}):`);
     displayTable(
       (() => {

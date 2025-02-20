@@ -3,7 +3,7 @@
 import { Command } from '@commander-js/extra-typings';
 import consola from 'consola';
 import dotenv from 'dotenv';
-import { infoAction, listAction } from './commands/user';
+import { userCommandAddAction, userCommandInfoAction, userCommandListAction } from './commands/user';
 
 dotenv.config();
 
@@ -21,29 +21,26 @@ program
       .description('List all registered users')
       .option('-f, --filter <filter>', 'Filter users by name')
       .option('-s, --sync', 'Force sync with providers')
-      .action(listAction)
+      .action(userCommandListAction)
   )
   .addCommand(
     new Command('add')
-      .description('Create a new user')
+      .description('Create a new user with provider(s)')
       .requiredOption('-e, --email <email>', "User's email address")
-      .requiredOption('-n, --name <name>', "User's name")
-      .option('-p, --provider <providers>', 'Comma-separated list of providers')
-      .action(async options => {
-        consola.info('yet to implement', options);
-      })
+      .requiredOption('-p, --provider <providers>', 'Comma-separated list of providers (openai, anthropic)')
+      .action(userCommandAddAction)
   )
   .addCommand(
     new Command('info')
       .description('Show detailed user info')
       .argument('<email>', "User's email address")
-      .action(infoAction)
+      .action(userCommandInfoAction)
   )
   .addCommand(
     new Command('remove')
       .description('Remove provider(s) for a user')
       .argument('<email>', "User's email address")
-      .option('-p, --provider <providers>', 'Comma-separated list of providers')
+      .option('-p, --provider <providers>', 'Comma-separated list of providers (openai, anthropic)')
       .action(async (email, options) => {
         consola.info('yet to implement', email, options);
       })

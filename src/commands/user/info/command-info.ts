@@ -6,11 +6,11 @@ import * as loading from '@/utils/loading';
 import { consola } from 'consola';
 import invariant from 'tiny-invariant';
 
-export async function infoAction(email: string) {
+export async function userCommandInfoAction(email: string) {
   try {
     loading.start('Loading user info...');
 
-    invariant(email.includes('@'), 'Invalid email format. Email must contain "@"');
+    invariant(email.includes('@euri.com'), 'Invalid email format. Email must contain "@euri.com"');
 
     const aiProviders = [createProvider('anthropic'), createProvider('openai')];
     const userInfoFromProviders = await Promise.all(

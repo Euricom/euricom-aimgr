@@ -64,6 +64,29 @@ interface CostDto {
   next_page: string | null;
 }
 
+interface UserDto {
+  object: 'organization.user';
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  created_at: number;
+}
+
+interface InviteUserDto {
+  object: 'organization.invite';
+  id: string;
+  email: string;
+  role: string;
+  status: string;
+  invited_at: number;
+  expires_at: number;
+  accepted_at: number | null;
+  projects: {
+    id: string;
+    role: string;
+  }[];
+}
 class OpenAIClient extends BaseAPIClient {
   constructor(apiKey: string) {
     super('https://api.openai.com/v1/organization', {
@@ -143,6 +166,41 @@ export class OpenAIProvider extends AIProvider {
       name: user.name,
       providers: [{ name: this.getName() }],
     }));
+  }
+
+  async isUserMemberOfProvider(email: string): Promise<boolean> {
+    const projectsResponse = await this.client.get<ListDto<ProjectDto>>('/projects?limit=100');
+    return projectsResponse.data.some(project => project.name.toLowerCase() === email);
+  }
+
+  async addUser(email: string): Promise<User> {
+    const emailParts = normalizeEmail(email);
+    const projectName = emailParts.join(' ');
+
+    // TODO: requires to check if the user already exists in the organization.
+    const organizationUsersResponse = await this.client.get<ListDto<UserDto>>('/users');
+    const userExists = organizationUsersResponse.data.some(user => user.email === email);
+    // create a project in the organization for this user (ex. "john.doe@euri.com" => "john doe")
+    const createProjectResponse = await this.client.post<ProjectDto>('/projects', {
+      name: projectName,
+    });
+    if (!userExists) {
+      // TODO: if not, we need to add (invite) the user to the organization.
+      await this.client.post<InviteUserDto>('invites', {
+        email,
+        project_ids: [createProjectResponse.id],
+      });
+    }
+
+    return {
+      email,
+      name: createProjectResponse.name,
+      providers: [
+        {
+          name: this.getName(),
+        },
+      ],
+    };
   }
 
   private async fetchUsedCredits(userProjectId: string): Promise<number> {
