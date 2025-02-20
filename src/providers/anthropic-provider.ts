@@ -14,22 +14,6 @@ interface WorkspaceDto {
   display_color: string;
 }
 
-interface WorkspaceMemberDto {
-  type: 'workspace_member';
-  user_id: string;
-  workspace_id: string;
-  workspace_role: 'workspace_user' | 'workspace_developer' | 'workspace_admin' | 'workspace_billing';
-}
-
-interface UserDto {
-  id: string;
-  type: 'user';
-  email: string;
-  name: string;
-  role: 'user' | 'developer' | 'billing' | 'admin';
-  added_at: string;
-}
-
 interface ListDto<T> {
   data: T[];
   has_more: boolean;

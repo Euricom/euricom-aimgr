@@ -5,8 +5,6 @@ import consola from 'consola';
 import dotenv from 'dotenv';
 import { infoAction, listAction } from './commands/user';
 
-// import { env } from './env';
-
 dotenv.config();
 
 const program = new Command();

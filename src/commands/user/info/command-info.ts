@@ -9,10 +9,13 @@ import invariant from 'tiny-invariant';
 export async function infoAction(email: string) {
   try {
     loading.start('Loading user info...');
+
     invariant(email.includes('@'), 'Invalid email format. Email must contain "@"');
 
     const aiProviders = [createProvider('anthropic'), createProvider('openai')];
-    const userInfoFromProviders = await Promise.all(aiProviders.map(aiProvider => aiProvider.fetchUserInfo(email)));
+    const userInfoFromProviders = await Promise.all(
+      aiProviders.map(aiProvider => aiProvider.fetchUserInfo(email.toLowerCase()))
+    );
 
     // merge the user info from the providers into a single user object
     const mergedUser = mergeUsers(userInfoFromProviders);

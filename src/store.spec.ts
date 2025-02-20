@@ -86,6 +86,14 @@ describe('Store', () => {
       expect(store.get('key1')).toBe('value3');
       expect(store.get('key2')).toBe('value2');
     });
+    it('should handle concurrent access', async () => {
+      const promises = Array.from({ length: 10 }, (_, i) => store.set(`key${i}`, `value${i}`));
+      await Promise.all(promises);
+
+      for (let i = 0; i < 10; i++) {
+        expect(store.get(`key${i}`)).toBe(`value${i}`);
+      }
+    });
   });
 
   describe('type safety', () => {

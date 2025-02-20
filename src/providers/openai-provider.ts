@@ -14,15 +14,6 @@ interface ProjectDto {
   status: 'active' | 'archived';
 }
 
-interface ProjectUserDto {
-  object: 'organization.project.user';
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  added_at: number;
-}
-
 interface ListDto<T> {
   object: 'list';
   data: T[];
@@ -155,12 +146,11 @@ export class OpenAIProvider extends AIProvider {
   }
 
   private async fetchUsedCredits(userProjectId: string): Promise<number> {
-    // Get start of the current month (1st day of the month at 00:00:00)
     const params = new URLSearchParams({
-      start_time: getStartOfCurrentMonth(),
-      end_time: getEndOfToday(),
+      start_time: getStartOfCurrentMonth(), // Get start of the current month (1st day of the month at 00:00:00)
+      end_time: getEndOfToday(), // get end of today
       project_ids: userProjectId,
-      limit: '31',
+      limit: '31', // limit to 31 days (will return 31 buckets, cost per day)
     });
 
     const costsResponse = await this.client.get<CostDto>(`/costs?${params}`);
