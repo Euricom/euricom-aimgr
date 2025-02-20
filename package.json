@@ -50,7 +50,7 @@
     "tsup": "^8.3.6",
     "tsx": "^4.7.0",
     "typescript": "^5.0.0",
-    "vitest": "^0.34.1"
+    "vitest": "^0.34.6"
   },
   "engines": {
     "node": ">=18",
