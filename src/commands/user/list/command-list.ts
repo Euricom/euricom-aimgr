@@ -10,7 +10,7 @@ interface ListOptions {
   sync?: boolean;
 }
 
-export async function userCommandListAction(options: ListOptions) {
+export async function userListCommand(options: ListOptions) {
   try {
     loading.start('Loading user list...');
 

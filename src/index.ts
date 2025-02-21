@@ -3,7 +3,7 @@
 import { Command } from '@commander-js/extra-typings';
 import consola from 'consola';
 import dotenv from 'dotenv';
-import { userCommandAddAction, userCommandInfoAction, userCommandListAction } from './commands/user';
+import { userAddCommand, userAssignCommand, userInfoCommand, userListCommand } from './commands/user';
 
 dotenv.config();
 
@@ -21,20 +21,27 @@ program
       .description('List all registered users')
       .option('-f, --filter <filter>', 'Filter users by name')
       .option('-s, --sync', 'Force sync with providers')
-      .action(userCommandListAction)
+      .action(userListCommand)
   )
   .addCommand(
     new Command('add')
       .description('Create a new user with provider(s)')
       .requiredOption('-e, --email <email>', "User's email address")
       .requiredOption('-p, --provider <providers>', 'Comma-separated list of providers (openai, anthropic)')
-      .action(userCommandAddAction)
+      .action(userAddCommand)
+  )
+  .addCommand(
+    new Command('assign')
+      .description('Assign a user to a provider')
+      .requiredOption('-e, --email <email>', "User's email address")
+      .requiredOption('-p, --provider <providers>', 'Comma-separated list of providers (openai, anthropic)')
+      .action(userAssignCommand)
   )
   .addCommand(
     new Command('info')
       .description('Show detailed user info')
       .argument('<email>', "User's email address")
-      .action(userCommandInfoAction)
+      .action(userInfoCommand)
   )
   .addCommand(
     new Command('remove')

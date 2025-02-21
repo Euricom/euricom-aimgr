@@ -152,55 +152,59 @@ export class OpenAIProvider extends AIProvider {
   }
 
   async fetchUsers(): Promise<User[]> {
-    // 1. Get all projects
-    const projectsResponse = await this.client.get<ListDto<ProjectDto>>('/projects?limit=100');
+    const organizationMembersResponse = await this.client.get<ListDto<UserDto>>('/users?limit=100');
 
-    // 2. Get all projects and use the project name to generate the user email & name
-    const users: { name: string; email: string }[] = projectsResponse.data.map(project => ({
-      name: project.name.toLowerCase(),
-      email: `${project.name.split(' ')[0].toLowerCase()}.${project.name.split(' ').slice(1).join('').toLowerCase()}@euri.com`,
-    }));
-
-    return users.map(user => ({
+    const users = organizationMembersResponse.data.map(user => ({
       email: user.email,
       name: user.name,
       providers: [{ name: this.getName() }],
     }));
+
+    return users;
   }
 
   async isUserMemberOfProvider(email: string): Promise<boolean> {
-    const projectsResponse = await this.client.get<ListDto<ProjectDto>>('/projects?limit=100');
-    return projectsResponse.data.some(project => project.name.toLowerCase() === email);
+    const organizationMembersResponse = await this.client.get<ListDto<UserDto>>('/users?limit=100');
+    return organizationMembersResponse.data.some(user => user.email.toLowerCase() === email);
   }
 
-  async addUser(email: string): Promise<User> {
-    const emailParts = normalizeEmail(email);
-    const projectName = emailParts.join(' ');
+  async assignUser(email: string): Promise<boolean> {
+    const organizationUsersResponse = await this.client.get<ListDto<UserDto>>('/users?limit=100');
+    const user = organizationUsersResponse.data.find(user => user.email === email);
 
-    // TODO: requires to check if the user already exists in the organization.
-    const organizationUsersResponse = await this.client.get<ListDto<UserDto>>('/users');
-    const userExists = organizationUsersResponse.data.some(user => user.email === email);
-    // create a project in the organization for this user (ex. "john.doe@euri.com" => "john doe")
-    const createProjectResponse = await this.client.post<ProjectDto>('/projects', {
-      name: projectName,
-    });
-    if (!userExists) {
-      // TODO: if not, we need to add (invite) the user to the organization.
-      await this.client.post<InviteUserDto>('invites', {
-        email,
-        project_ids: [createProjectResponse.id],
+    if (!user) return false;
+
+    const isAssigned = await this.isUserAssignedToProvider(email);
+    if (isAssigned) return true;
+
+    const createProjectResponse = await this.client.post<ProjectDto>('/projects', { name: user.name });
+
+    if (createProjectResponse.status === 'active') {
+      await this.client.post<UserDto>(`/projects/${createProjectResponse.id}/users`, {
+        user_id: user.id,
+        role: 'member',
       });
+      return true;
     }
 
-    return {
-      email,
-      name: createProjectResponse.name,
-      providers: [
-        {
-          name: this.getName(),
-        },
-      ],
-    };
+    return false;
+  }
+
+  async addUser(email: string): Promise<boolean> {
+    const organizationUsersResponse = await this.client.get<ListDto<UserDto>>('/users?limit=100');
+    const userExists = organizationUsersResponse.data.some(user => user.email === email);
+
+    if (!userExists) {
+      await this.client.post<InviteUserDto>('/invites', { email, role: 'reader' });
+      return true; // User invited successfully
+    }
+
+    return false; // User already exists
+  }
+
+  async isUserInvitePending(email: string): Promise<boolean> {
+    const invitesResponse = await this.client.get<ListDto<InviteUserDto>>('/invites?limit=100');
+    return invitesResponse.data.some(invite => invite.email === email && invite.status === 'pending');
   }
 
   private async fetchUsedCredits(userProjectId: string): Promise<number> {
@@ -224,5 +228,21 @@ export class OpenAIProvider extends AIProvider {
     });
 
     return Math.round(usedCredits * 1000) / 1000; // Round to three decimal places
+  }
+
+  private async isUserAssignedToProvider(email: string): Promise<boolean> {
+    const projectsResponse = await this.client.get<ListDto<ProjectDto>>('/projects?limit=100');
+    // TODO: check if the user (email) is assigned to any of the projects , use the normalizeEmail function to normalize the email and compare it with the project name
+    const emailParts = normalizeEmail(email);
+    const userProject = projectsResponse.data.find(project => {
+      const projectName = normalizeString(project.name);
+      return emailParts.every(part => projectName.includes(part));
+    });
+
+    if (!userProject) return false;
+
+    // TODO: double check if the user is assigned to the project by fetching the users in the project and checking if the email is in the list
+    const usersInProjectResponse = await this.client.get<ListDto<UserDto>>(`/projects/${userProject.id}/users`);
+    return usersInProjectResponse.data.some(user => user.email.toLowerCase() === email);
   }
 }

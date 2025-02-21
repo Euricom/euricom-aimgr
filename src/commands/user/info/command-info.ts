@@ -6,15 +6,28 @@ import * as loading from '@/utils/loading';
 import { consola } from 'consola';
 import invariant from 'tiny-invariant';
 
-export async function userCommandInfoAction(email: string) {
+export async function userInfoCommand(email: string) {
   try {
     loading.start('Loading user info...');
 
-    invariant(email.includes('@euri.com'), 'Invalid email format. Email must contain "@euri.com"');
+    invariant(email.includes('@'), 'Invalid email format. Email must contain "@"');
 
+    // get the providers that have a pending invite
     const aiProviders = [createProvider('anthropic'), createProvider('openai')];
+    const invitePendingStatus = await Promise.all(
+      aiProviders.map(aiProvider => aiProvider.isUserInvitePending(email.toLowerCase()))
+    );
+
+    // filter out the providers that have a pending invite
+    const pendingProviders = aiProviders
+      .filter((_, index) => invitePendingStatus[index])
+      .map(aiProvider => aiProvider.getName());
+
+    // fetch the user info from the providers that don't have a pending invite
     const userInfoFromProviders = await Promise.all(
-      aiProviders.map(aiProvider => aiProvider.fetchUserInfo(email.toLowerCase()))
+      aiProviders
+        .filter((_, index) => !invitePendingStatus[index])
+        .map(aiProvider => aiProvider.fetchUserInfo(email.toLowerCase()))
     );
 
     // merge the user info from the providers into a single user object
@@ -35,6 +48,10 @@ export async function userCommandInfoAction(email: string) {
       users[userIndex] = user;
     }
     store.set('users', users);
+
+    if (pendingProviders.length > 0) {
+      consola.warn(`User ${email} has pending invites for the following providers: ${pendingProviders.join(', ')}`);
+    }
 
     // display the user info in a table
     consola.log(`\nUser Info (${user.email}):`);

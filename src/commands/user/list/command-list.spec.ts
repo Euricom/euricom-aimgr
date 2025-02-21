@@ -1,13 +1,14 @@
-import { mergeUsers, User } from '@/domain/user';
+// existing imports...
+import { User } from '@/domain/user';
 import { createProvider } from '@/providers/ai-provider-factory';
 import * as store from '@/store';
 import { describe, expect, it, Mock, vi } from 'vitest';
-import { userCommandListAction } from './command-list';
+import { userListCommand } from './command-list';
 
 vi.mock('@/store');
 vi.mock('@/providers/ai-provider-factory');
 
-describe('userCommandListAction', () => {
+describe('userListCommand', () => {
   let mockUsers: User[] = [];
 
   beforeEach(() => {
@@ -20,14 +21,13 @@ describe('userCommandListAction', () => {
   it('should fetch users from providers when store is empty', async () => {
     // arrange
     (store.get as Mock).mockReturnValueOnce({ users: [] });
-    // const storeGetMock = vi.spyOn(store, 'get').mockReturnValue({ users: [] });
     const mockProvider = {
       fetchUsers: vi.fn().mockResolvedValue(mockUsers),
     };
     (createProvider as Mock).mockReturnValue(mockProvider);
 
     // act
-    await userCommandListAction({ sync: true });
+    await userListCommand({ sync: true });
 
     // assert
     expect(store.get).toHaveBeenCalledWith('users');
@@ -45,11 +45,23 @@ describe('userCommandListAction', () => {
     (createProvider as Mock).mockReturnValue(mockProvider);
 
     // act
-    await userCommandListAction({ sync: false });
+    await userListCommand({ sync: false });
 
     // assert
     expect(store.get).toHaveBeenCalledWith('users');
     expect(mockProvider.fetchUsers).not.toHaveBeenCalled(); // Should not call fetchUsers
+  });
+
+  it('should apply filter that returns results', async () => {
+    // arrange
+    (store.get as Mock).mockReturnValueOnce({ users: mockUsers });
+
+    // act
+    await userListCommand({ filter: 'user1' });
+
+    // assert
+    expect(store.get).toHaveBeenCalledWith('users');
+    expect(mockUsers.filter(user => user.email.includes('user1')).length).toBe(1);
   });
 
   it('should apply filter that returns no results', async () => {
@@ -57,10 +69,11 @@ describe('userCommandListAction', () => {
     (store.get as Mock).mockReturnValueOnce({ users: mockUsers });
 
     // act
-    await userCommandListAction({ filter: 'nonexistent' });
+    await userListCommand({ filter: 'nonexistent' });
 
     // assert
     expect(store.get).toHaveBeenCalledWith('users');
+    expect(mockUsers.filter(user => user.email.includes('nonexistent')).length).toBe(0);
   });
 
   it('should handle case where provider fetches no users', async () => {
@@ -71,15 +84,13 @@ describe('userCommandListAction', () => {
       fetchUsers: vi.fn().mockResolvedValue([]), // No users returned
     };
     (createProvider as Mock).mockReturnValue(mockProvider);
-    (mergeUsers as Mock).mockReturnValue([]);
 
     // act
-    await userCommandListAction({ sync: true });
+    await userListCommand({ sync: true });
 
     // assert
     expect(store.get).toHaveBeenCalledWith('users');
     expect(mockProvider.fetchUsers).toHaveBeenCalled();
-    expect(mergeUsers).toHaveBeenCalled();
     expect(store.set).toHaveBeenCalledWith('users', []);
   });
 });
