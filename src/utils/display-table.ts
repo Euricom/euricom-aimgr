@@ -7,10 +7,10 @@ interface TableRow {
 }
 
 export function displayTable(data: TableRow[]) {
-  invariant(Array.isArray(data) && data.length, 'Data array cannot be empty');
+  invariant(Array.isArray(data), 'Input must be an array');
 
-  // Get headers from the first object's keys
-  const headers = Object.keys(data[0]);
+  // Get headers from first item
+  const headers = Object.keys(data[0] || {});
 
   const table = new Table({
     head: headers,

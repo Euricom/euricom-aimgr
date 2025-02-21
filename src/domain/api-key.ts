@@ -1,5 +1,4 @@
 export interface ApiKey {
-  value: string;
+  keyHint: string;
   name: string;
-  creditsUsed: number;
 }
