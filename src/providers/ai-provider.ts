@@ -7,6 +7,7 @@ export abstract class AIProvider {
   abstract getUsers(): Promise<User[]>;
   abstract addUser(email: string): Promise<boolean>;
   abstract assignUser(userId: string, userName: string): Promise<boolean>;
+  abstract removeUser(userId: string, userName: string): Promise<boolean>;
   abstract getMemberFromProvider(
     email: string
   ): Promise<{ providerName: string; userName: string; userId: string } | undefined>;

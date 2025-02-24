@@ -8,7 +8,8 @@ vi.mock('@/utils/loading');
 vi.mock('consola');
 
 describe('userAssignCommand', () => {
-  const options = { email: 'user@example.com', provider: 'openai' };
+  const email = 'user@example.com';
+  const options = { provider: 'openai' };
 
   it('should assign user to provider', async () => {
     // arrange
@@ -26,10 +27,10 @@ describe('userAssignCommand', () => {
     (createProvider as Mock).mockReturnValue(mockProvider);
 
     // act
-    await userAssignCommand(options);
+    await userAssignCommand(email, options);
 
     // assert
-    expect(consola.success).toHaveBeenCalledWith(`User ${options.email} was assigned to: openai`);
+    expect(consola.success).toHaveBeenCalledWith(`\nUser ${email} was assigned to: openai`);
   });
 
   it('should handle user already assigned', async () => {
@@ -48,10 +49,10 @@ describe('userAssignCommand', () => {
     (createProvider as Mock).mockReturnValue(mockProvider);
 
     // act
-    await userAssignCommand(options);
+    await userAssignCommand(email, options);
 
     // assert
-    expect(consola.warn).toHaveBeenCalledWith(`User ${options.email} is already assigned to openai.`);
+    expect(consola.warn).toHaveBeenCalledWith(`\nUser ${email} is already assigned to openai.`);
   });
 
   it('should handle user not a member of provider', async () => {
@@ -65,10 +66,10 @@ describe('userAssignCommand', () => {
     (createProvider as Mock).mockReturnValue(mockProvider);
 
     // act
-    await userAssignCommand(options);
+    await userAssignCommand(email, options);
 
     // assert
-    expect(consola.warn).toHaveBeenCalledWith(`User ${options.email} is not a member of openai.`);
+    expect(consola.warn).toHaveBeenCalledWith(`\nUser ${email} is not a member of openai.`);
   });
 
   it('should handle assignment failure', async () => {
@@ -87,10 +88,10 @@ describe('userAssignCommand', () => {
     (createProvider as Mock).mockReturnValue(mockProvider);
 
     // act
-    await userAssignCommand(options);
+    await userAssignCommand(email, options);
 
     // assert
-    expect(consola.warn).toHaveBeenCalledWith(`Failed to assign user ${options.email} to openai.`);
+    expect(consola.warn).toHaveBeenCalledWith(`\nFailed to assign user ${email} to openai.`);
   });
 
   it('should handle errors gracefully', async () => {
@@ -99,7 +100,7 @@ describe('userAssignCommand', () => {
     (createProvider as Mock).mockReturnValue(mockProvider);
 
     // act
-    await userAssignCommand(options);
+    await userAssignCommand(email, options);
 
     // assert
     expect(consola.error).toHaveBeenCalled();

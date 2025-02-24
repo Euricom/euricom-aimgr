@@ -95,6 +95,12 @@ interface ProjectUserDto {
   added_at: number;
 }
 
+interface DeleteUserDto {
+  object: 'organization.user.deleted';
+  id: string;
+  deleted: boolean;
+}
+
 class OpenAIClient extends BaseAPIClient {
   constructor(apiKey: string) {
     super('https://api.openai.com/v1/organization', {
@@ -196,6 +202,31 @@ export class OpenAIProvider extends AIProvider {
     return false;
   }
 
+  async removeUser(userId: string, userName: string): Promise<boolean> {
+    // TODO: check if the user has a project
+    const projectsResponse = await this.client.get<ListDto<ProjectDto>>('/projects?limit=100');
+    const userProject = projectsResponse.data.find(project => project.name === userName);
+    if (userProject) {
+      // TODO: verify if the user is a member of the project
+      const usersInProjectResponse = await this.client.get<ListDto<ProjectUserDto>>(
+        `/projects/${userProject.id}/users`
+      );
+      const isUserMember = usersInProjectResponse.data.some(user => user.id === userId);
+      if (isUserMember) {
+        // TODO: remove the user from the project
+        await this.client.post<ProjectDto>(`/projects/${userProject.id}/archive`, {});
+      }
+    }
+
+    // TODO: remove the user from the provider
+    const deleteUserResponse = await this.client.delete<DeleteUserDto>(`/users/${userId}`);
+    if (deleteUserResponse.id) {
+      return true;
+    }
+
+    return false;
+  }
+
   async getMemberFromProvider(
     email: string
   ): Promise<{ providerName: string; userName: string; userId: string } | undefined> {
@@ -215,10 +246,8 @@ export class OpenAIProvider extends AIProvider {
   }
 
   async isUserMemberOfProvider(email: string): Promise<boolean> {
-    const { data } = await this.client.get<ListDto<UserDto>>(
-      `/users?emails[]=${encodeURIComponent(email.toLowerCase())}`
-    );
-    return data.length > 0;
+    const organizationMembersResponse = await this.client.get<ListDto<UserDto>>('/users?limit=100');
+    return organizationMembersResponse.data.some(user => user.email === email);
   }
 
   async isUserAssignedToProvider(userId: string, userName: string): Promise<boolean> {

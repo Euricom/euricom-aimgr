@@ -60,6 +60,11 @@ interface WorkspaceMemberDto {
   workspace_role: string;
 }
 
+interface DeleteUserDto {
+  id: string;
+  type: 'user_deleted';
+}
+
 class AnthropicClient extends BaseAPIClient {
   constructor(apiKey: string, version = '2023-06-01') {
     super('https://api.anthropic.com/v1/organizations', {
@@ -156,6 +161,32 @@ export class AnthropicProvider extends AIProvider {
         user_id: userId,
         workspace_role: 'workspace_developer',
       });
+      return true;
+    }
+
+    return false;
+  }
+
+  async removeUser(userId: string, userName: string): Promise<boolean> {
+    // TODO: check if the user has a workspace
+    const workspacesResponse = await this.client.get<ListDto<WorkspaceDto>>('/workspaces?limit=100');
+    const userWorkspace = workspacesResponse.data.find(workspace => workspace.name === userName);
+
+    if (userWorkspace) {
+      // TODO: verify if the user is a member of the workspace
+      const usersInWorkspaceResponse = await this.client.get<ListDto<WorkspaceMemberDto>>(
+        `/workspaces/${userWorkspace.id}/members`
+      );
+      const isUserMember = usersInWorkspaceResponse.data.some(user => user.user_id === userId);
+      if (isUserMember) {
+        // TODO: remove the user from the workspace
+        await this.client.post<WorkspaceDto>(`/workspaces/${userWorkspace.id}/archive`, {});
+      }
+    }
+
+    // Now remove the user
+    const deleteUserResponse = await this.client.delete<DeleteUserDto>(`/users/${userId}`);
+    if (deleteUserResponse.id) {
       return true;
     }
 

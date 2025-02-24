@@ -3,31 +3,26 @@ import * as loading from '@/utils/loading';
 import consola from 'consola';
 import invariant from 'tiny-invariant';
 
-interface AssignOptions {
-  email: string;
-  provider: string;
-}
-
-export async function userAssignCommand(options: AssignOptions) {
+export async function userAssignCommand(email: string, options: { provider: string }) {
   try {
-    invariant(options.email.includes('@'), 'Invalid email format. Email must contain "@"');
-    const requestedProviders = options.provider ? options.provider.split(' ').map(p => p.trim() as ProviderType) : [];
+    invariant(email.includes('@'), 'Invalid email format. Email must contain "@"');
+    const requestedProviders = options.provider ? options.provider.split(',').map(p => p.trim() as ProviderType) : [];
     const aiProviders = requestedProviders.map(provider => createProvider(provider as ProviderType));
 
     // loop through all the requested providers and check if the user exists in the provider
     const assignedProviders: string[] = [];
     for (const aiProvider of aiProviders) {
       loading.start(`Assigning user to ${aiProvider.getName()}...`);
-      const userMember = await aiProvider.getMemberFromProvider(options.email);
+      const userMember = await aiProvider.getMemberFromProvider(email);
       if (!userMember) {
-        consola.warn(`User ${options.email} is not a member of ${aiProvider.getName()}.`);
+        consola.warn(`\nUser ${email} is not a member of ${aiProvider.getName()}.`);
         continue;
       }
 
       // check if the user is already assigned to the provider (it already has a workspace or project)
       const isUserAssigned = await aiProvider.isUserAssignedToProvider(userMember.userId, userMember.userName);
       if (isUserAssigned) {
-        consola.warn(`User ${options.email} is already assigned to ${aiProvider.getName()}.`);
+        consola.warn(`\nUser ${email} is already assigned to ${aiProvider.getName()}.`);
         continue;
       }
 
@@ -36,12 +31,12 @@ export async function userAssignCommand(options: AssignOptions) {
       if (assignResult) {
         assignedProviders.push(aiProvider.getName());
       } else {
-        consola.warn(`Failed to assign user ${options.email} to ${aiProvider.getName()}.`);
+        consola.warn(`\nFailed to assign user ${email} to ${aiProvider.getName()}.`);
       }
     }
 
     if (assignedProviders.length > 0) {
-      consola.success(`User ${options.email} was assigned to: ${assignedProviders.join(', ')}`);
+      consola.success(`\nUser ${email} was assigned to: ${assignedProviders.join(', ')}`);
     }
   } catch (error) {
     consola.error(error);
