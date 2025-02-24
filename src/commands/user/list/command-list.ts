@@ -3,9 +3,15 @@ import { createProvider } from '@/providers/ai-provider-factory';
 import * as store from '@/store';
 import { displayTable } from '@/utils/display-table';
 import * as loading from '@/utils/loading';
+import chalk from 'chalk';
 import { consola } from 'consola';
 
-export async function listAction(options: { filter?: string; sync?: boolean }) {
+interface ListOptions {
+  filter?: string;
+  sync?: boolean;
+}
+
+export async function userListCommand(options: ListOptions) {
   try {
     loading.start('Loading user list...');
 
@@ -14,7 +20,7 @@ export async function listAction(options: { filter?: string; sync?: boolean }) {
     // Fetch from providers if store is empty or sync is requested
     if (users.length === 0 || options.sync) {
       const aiProviders = [createProvider('openai'), createProvider('anthropic')];
-      const usersFromProviders = await Promise.all(aiProviders.map(aiProvider => aiProvider.fetchUsers()));
+      const usersFromProviders = await Promise.all(aiProviders.map(aiProvider => aiProvider.getUsers()));
       users = mergeUsers(usersFromProviders);
       store.set('users', users);
     }
@@ -24,16 +30,18 @@ export async function listAction(options: { filter?: string; sync?: boolean }) {
       users = users.filter(user => user.email.toLowerCase().includes(options.filter!.toLowerCase()));
     }
 
-    consola.log(`\nUser List (${users.length}):`);
+    // Display the user list
+    consola.log(chalk.underline.cyan('\nUser List:'));
     displayTable(
       (() => {
         if (users.length > 0) {
           return users.map(user => ({
-            ...user,
-            providers: user.providers.map(provider => provider.name).join(', '),
+            email: user.email,
+            name: user.name,
+            'member of?': user.providers.map(provider => provider.name).join(', '),
           }));
         }
-        return [{ email: '-', name: '-', providers: '-' }];
+        return [{ email: '/', name: '/', 'member of?': '/' }];
       })()
     );
   } catch (error) {

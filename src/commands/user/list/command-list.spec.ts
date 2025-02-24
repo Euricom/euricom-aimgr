@@ -1,72 +1,119 @@
-import { mergeUsers } from '@/domain/user';
+// existing imports...
+import { User } from '@/domain/user';
 import { createProvider } from '@/providers/ai-provider-factory';
 import * as store from '@/store';
+import { consola } from 'consola';
 import { describe, expect, it, Mock, vi } from 'vitest';
-import { listAction } from './command-list';
+import { userListCommand } from './command-list';
 
 vi.mock('@/store');
 vi.mock('@/providers/ai-provider-factory');
-vi.mock('@/domain/user');
+vi.mock('@/utils/display-table');
+vi.mock('@/utils/loading');
+vi.mock('consola');
 
-describe('listAction', () => {
-  const mockUsers = [
-    { email: 'user1@example.com', name: 'User One', providers: [{ name: 'openai' }, { name: 'anthropic' }] },
-    { email: 'user2@example.com', name: 'User Two', providers: [{ name: 'openai' }] },
-  ];
+describe('userListCommand', () => {
+  let mockUsers: User[] = [];
+
+  beforeEach(() => {
+    mockUsers = [
+      { email: 'user1@example.com', name: 'User One', providers: [{ name: 'openai' }, { name: 'anthropic' }] },
+      { email: 'user2@example.com', name: 'User Two', providers: [{ name: 'openai' }] },
+    ];
+  });
 
   it('should fetch users from providers when store is empty', async () => {
-    (store.get as Mock).mockReturnValueOnce({ users: [] });
-
+    // arrange
+    (store.get as Mock).mockReturnValueOnce([]);
     const mockProvider = {
-      fetchUsers: vi.fn().mockResolvedValue(mockUsers),
+      getUsers: vi.fn().mockResolvedValue(mockUsers),
     };
     (createProvider as Mock).mockReturnValue(mockProvider);
-    (mergeUsers as Mock).mockReturnValue(mockUsers);
 
-    await listAction({ sync: true });
+    // act
+    await userListCommand({ sync: true });
 
+    // assert
     expect(store.get).toHaveBeenCalledWith('users');
-    expect(mockProvider.fetchUsers).toHaveBeenCalled();
-    expect(mergeUsers).toHaveBeenCalled();
+    expect(mockProvider.getUsers).toHaveBeenCalled();
     expect(store.set).toHaveBeenCalledWith('users', mockUsers);
   });
 
   it('should not fetch users from providers when store is not empty', async () => {
-    (store.get as Mock).mockReturnValueOnce({ users: mockUsers });
+    // arrange
+    (store.get as Mock).mockReturnValueOnce(mockUsers);
 
     const mockProvider = {
-      fetchUsers: vi.fn(),
+      getUsers: vi.fn(),
     };
     (createProvider as Mock).mockReturnValue(mockProvider);
 
-    await listAction({ sync: false });
+    // act
+    await userListCommand({ sync: false });
 
+    // assert
     expect(store.get).toHaveBeenCalledWith('users');
-    expect(mockProvider.fetchUsers).not.toHaveBeenCalled(); // Should not call fetchUsers
+    expect(mockProvider.getUsers).not.toHaveBeenCalled(); // Should not call getUsers
+  });
+
+  it('should apply filter that returns results', async () => {
+    // arrange
+    (store.get as Mock).mockReturnValueOnce(mockUsers);
+
+    // act
+    await userListCommand({ filter: 'user1' });
+
+    // assert
+    expect(store.get).toHaveBeenCalledWith('users');
+    expect(mockUsers.filter(user => user.email.includes('user1')).length).toBe(1);
   });
 
   it('should apply filter that returns no results', async () => {
-    (store.get as Mock).mockReturnValueOnce({ users: mockUsers });
+    // arrange
+    (store.get as Mock).mockReturnValueOnce(mockUsers);
 
-    await listAction({ filter: 'nonexistent' });
+    // act
+    await userListCommand({ filter: 'nonexistent' });
 
+    // assert
     expect(store.get).toHaveBeenCalledWith('users');
+    expect(mockUsers.filter(user => user.email.includes('nonexistent')).length).toBe(0);
   });
 
   it('should handle case where provider fetches no users', async () => {
-    (store.get as Mock).mockReturnValueOnce({ users: [] });
+    // arrange
+    (store.get as Mock).mockReturnValueOnce([]);
 
     const mockProvider = {
-      fetchUsers: vi.fn().mockResolvedValue([]), // No users returned
+      getUsers: vi.fn().mockResolvedValue([]), // No users returned
     };
     (createProvider as Mock).mockReturnValue(mockProvider);
-    (mergeUsers as Mock).mockReturnValue([]);
 
-    await listAction({ sync: true });
+    // act
+    await userListCommand({ sync: true });
 
+    // assert
     expect(store.get).toHaveBeenCalledWith('users');
-    expect(mockProvider.fetchUsers).toHaveBeenCalled();
-    expect(mergeUsers).toHaveBeenCalled();
+    expect(mockProvider.getUsers).toHaveBeenCalled();
     expect(store.set).toHaveBeenCalledWith('users', []);
+  });
+
+  it('should handle empty user list gracefully', async () => {
+    // arrange
+    (store.get as Mock).mockReturnValueOnce([]);
+
+    const mockProvider = {
+      getUsers: vi.fn().mockResolvedValue([]), // No users returned
+    };
+    (createProvider as Mock).mockReturnValue(mockProvider);
+
+    // act
+    await userListCommand({ sync: true });
+
+    // assert
+    expect(store.get).toHaveBeenCalledWith('users');
+    expect(mockProvider.getUsers).toHaveBeenCalled();
+    expect(store.set).toHaveBeenCalledWith('users', []);
+    expect(consola.log).toHaveBeenCalledWith(expect.stringContaining('User List:'));
   });
 });

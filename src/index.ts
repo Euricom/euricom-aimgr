@@ -3,7 +3,7 @@
 import { Command } from '@commander-js/extra-typings';
 import consola from 'consola';
 import dotenv from 'dotenv';
-import { infoAction, listAction } from './commands/user';
+import { userAddCommand, userAssignCommand, userInfoCommand, userListCommand } from './commands/user';
 
 dotenv.config();
 
@@ -21,58 +21,35 @@ program
       .description('List all registered users')
       .option('-f, --filter <filter>', 'Filter users by name')
       .option('-s, --sync', 'Force sync with providers')
-      .action(listAction)
+      .action(userListCommand)
   )
   .addCommand(
     new Command('add')
-      .description('Create a new user')
+      .description('Add a new member to a provider')
       .requiredOption('-e, --email <email>', "User's email address")
-      .requiredOption('-n, --name <name>', "User's name")
-      .option('-p, --provider <providers>', 'Comma-separated list of providers')
-      .action(async options => {
-        consola.info('yet to implement', options);
-      })
+      .requiredOption('-p, --provider <providers>', 'Comma-separated list of providers (openai, anthropic)')
+      .action(userAddCommand)
+  )
+  .addCommand(
+    new Command('assign')
+      .description('Assign a workspace for the provider member to manage API keys')
+      .requiredOption('-e, --email <email>', "User's email address")
+      .requiredOption('-p, --provider <providers>', 'Comma-separated list of providers (openai, anthropic)')
+      .action(userAssignCommand)
   )
   .addCommand(
     new Command('info')
       .description('Show detailed user info')
       .argument('<email>', "User's email address")
-      .action(infoAction)
+      .action(userInfoCommand)
   )
   .addCommand(
     new Command('remove')
-      .description('Remove provider(s) for a user')
+      .description('Remove member from provider')
       .argument('<email>', "User's email address")
-      .option('-p, --provider <providers>', 'Comma-separated list of providers')
+      .option('-p, --provider <providers>', 'Comma-separated list of providers (openai, anthropic)')
       .action(async (email, options) => {
         consola.info('yet to implement', email, options);
-      })
-  )
-  .addCommand(
-    new Command('add-key')
-      .description('Add API key(s) for a user')
-      .argument('<email>', "User's email address")
-      .requiredOption('-p, --provider <providers>', 'Comma-separated list of providers')
-      .action(async (email, options) => {
-        consola.info('yet to implement', email, options);
-      })
-  )
-  .addCommand(
-    new Command('set-limit')
-      .description("Set credit limit for a user's provider")
-      .argument('<email>', "User's email address")
-      .requiredOption('-p, --provider <provider>', 'Provider name')
-      .requiredOption('-l, --limit <limit>', 'Credit limit')
-      .action(async (email, options) => {
-        consola.info('yet to implement', email, options);
-      })
-  )
-  .addCommand(
-    new Command('disable')
-      .description('Disable a user')
-      .argument('<email>', "User's email address")
-      .action(async email => {
-        consola.info('yet to implement', email);
       })
   );
 
