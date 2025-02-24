@@ -3,23 +3,16 @@ import * as loading from '@/utils/loading';
 import consola from 'consola';
 import invariant from 'tiny-invariant';
 
-interface AddOptions {
-  email: string;
-  provider: string;
-}
-
-export async function userAddCommand(options: AddOptions) {
+export async function userAddCommand(email: string, options: { provider: string }) {
   try {
     loading.start('Adding user...');
 
-    invariant(options.email.includes('@'), 'Invalid email format. Email must contain "@"');
-    const requestedProviders = options.provider ? options.provider.split(' ').map(p => p.trim() as ProviderType) : [];
+    invariant(email.includes('@'), 'Invalid email format. Email must contain "@"');
+    const requestedProviders = options.provider ? options.provider.split(',').map(p => p.trim() as ProviderType) : [];
     const aiProviders = requestedProviders.map(provider => createProvider(provider as ProviderType));
 
     // Check if the user already exists in the requestedProviders and add the user to the providers
-    const addUserResults = await Promise.all(
-      aiProviders.map(aiProvider => aiProvider.addUser(options.email.toLowerCase()))
-    );
+    const addUserResults = await Promise.all(aiProviders.map(aiProvider => aiProvider.addUser(email.toLowerCase())));
 
     const existingProviders: string[] = [];
     const invitedProviders: string[] = [];
@@ -35,7 +28,7 @@ export async function userAddCommand(options: AddOptions) {
 
     // Log messages for existing users
     if (existingProviders.length > 0) {
-      consola.warn(`User ${options.email} already exists in the following providers: ${existingProviders.join(', ')}`);
+      consola.warn(`User ${email} already exists in the following providers: ${existingProviders.join(', ')}`);
     }
 
     // Log messages for invites sent

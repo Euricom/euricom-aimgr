@@ -8,7 +8,8 @@ vi.mock('@/utils/loading');
 vi.mock('consola');
 
 describe('userAddCommand', () => {
-  const options = { email: 'user@example.com', provider: 'openai' };
+  const email = 'user@example.com';
+  const options = { provider: 'openai' };
 
   it('should add user to provider', async () => {
     // arrange
@@ -20,10 +21,10 @@ describe('userAddCommand', () => {
     (createProvider as Mock).mockReturnValue(mockProvider);
 
     // act
-    await userAddCommand(options);
+    await userAddCommand(email, options);
 
     // assert
-    expect(mockProvider.addUser).toHaveBeenCalledWith(options.email.toLowerCase());
+    expect(mockProvider.addUser).toHaveBeenCalledWith(email.toLowerCase());
     expect(consola.success).toHaveBeenCalledWith(
       `User invited successfully for the following providers: ${options.provider}\nWaiting for invite acceptance.`
     );
@@ -39,12 +40,10 @@ describe('userAddCommand', () => {
     (createProvider as Mock).mockReturnValue(mockProvider);
 
     // act
-    await userAddCommand(options);
+    await userAddCommand(email, options);
 
     // assert
-    expect(consola.warn).toHaveBeenCalledWith(
-      `User ${options.email} already exists in the following providers: openai`
-    );
+    expect(consola.warn).toHaveBeenCalledWith(`User ${email} already exists in the following providers: openai`);
   });
 
   -it('should handle errors gracefully', async () => {
@@ -53,7 +52,7 @@ describe('userAddCommand', () => {
     (createProvider as Mock).mockReturnValue(mockProvider);
 
     // act
-    await userAddCommand(options);
+    await userAddCommand(email, options);
 
     // assert
     expect(consola.error).toHaveBeenCalled();

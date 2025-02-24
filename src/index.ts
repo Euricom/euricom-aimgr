@@ -3,7 +3,13 @@
 import { Command } from '@commander-js/extra-typings';
 import consola from 'consola';
 import dotenv from 'dotenv';
-import { userAddCommand, userAssignCommand, userInfoCommand, userListCommand } from './commands/user';
+import {
+  userAddCommand,
+  userAssignCommand,
+  userInfoCommand,
+  userListCommand,
+  userRemoveCommand,
+} from './commands/user';
 
 dotenv.config();
 
@@ -26,14 +32,14 @@ program
   .addCommand(
     new Command('add')
       .description('Add a new member to a provider')
-      .requiredOption('-e, --email <email>', "User's email address")
+      .argument('<email>', "User's email address")
       .requiredOption('-p, --provider <providers>', 'Comma-separated list of providers (openai, anthropic)')
       .action(userAddCommand)
   )
   .addCommand(
     new Command('assign')
       .description('Assign a workspace for the provider member to manage API keys')
-      .requiredOption('-e, --email <email>', "User's email address")
+      .argument('<email>', "User's email address")
       .requiredOption('-p, --provider <providers>', 'Comma-separated list of providers (openai, anthropic)')
       .action(userAssignCommand)
   )
@@ -45,12 +51,10 @@ program
   )
   .addCommand(
     new Command('remove')
-      .description('Remove member from provider')
+      .description('Remove member from provider. If no optional provider is provided, all providers will be removed.')
       .argument('<email>', "User's email address")
       .option('-p, --provider <providers>', 'Comma-separated list of providers (openai, anthropic)')
-      .action(async (email, options) => {
-        consola.info('yet to implement', email, options);
-      })
+      .action(userRemoveCommand)
   );
 
 // Provider commands

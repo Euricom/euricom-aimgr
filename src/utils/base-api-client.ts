@@ -16,4 +16,10 @@ export abstract class BaseAPIClient {
       body,
     });
   }
+
+  public delete<T>(url: string) {
+    return this.fetch<T>(url, {
+      method: 'DELETE',
+    });
+  }
 }
