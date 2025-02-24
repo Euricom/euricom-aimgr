@@ -6,7 +6,7 @@ import invariant from 'tiny-invariant';
 export async function userAssignCommand(email: string, options: { provider: string }) {
   try {
     invariant(email.includes('@'), 'Invalid email format. Email must contain "@"');
-    const requestedProviders = options.provider ? options.provider.split(',').map(p => p.trim() as ProviderType) : [];
+    const requestedProviders = options.provider ? options.provider.split(' ').map(p => p.trim() as ProviderType) : [];
     const aiProviders = requestedProviders.map(provider => createProvider(provider as ProviderType));
 
     // loop through all the requested providers and check if the user exists in the provider

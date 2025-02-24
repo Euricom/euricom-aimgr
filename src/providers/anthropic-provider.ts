@@ -1,3 +1,4 @@
+import { Invite } from '@/domain/invite';
 import { User } from '@/domain/user';
 import { BaseAPIClient } from '@/utils/base-api-client';
 import invariant from 'tiny-invariant';
@@ -228,5 +229,15 @@ export class AnthropicProvider extends AIProvider {
       `/workspaces/${userWorkspace.id}/members`
     );
     return usersInWorkspaceResponse.data.some(user => user.user_id === userId);
+  }
+
+  async getPendingInvites(): Promise<Invite[]> {
+    const invitesResponse = await this.client.get<ListDto<InviteUserDto>>('/invites?limit=100');
+    const pendingInvites = invitesResponse.data.filter(invite => invite.status === 'pending');
+    return pendingInvites.map(invite => ({
+      email: invite.email,
+      status: 'pending',
+      provider: this.getName(),
+    }));
   }
 }

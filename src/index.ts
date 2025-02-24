@@ -3,6 +3,7 @@
 import { Command } from '@commander-js/extra-typings';
 import consola from 'consola';
 import dotenv from 'dotenv';
+import { inviteListCommand } from './commands/invite';
 import {
   userAddCommand,
   userAssignCommand,
@@ -10,7 +11,6 @@ import {
   userListCommand,
   userRemoveCommand,
 } from './commands/user';
-
 dotenv.config();
 
 const program = new Command();
@@ -55,6 +55,16 @@ program
       .argument('<email>', "User's email address")
       .option('-p, --provider <providers>', 'Comma-separated list of providers (openai, anthropic)')
       .action(userRemoveCommand)
+  );
+
+program
+  .command('invite')
+  .description('Invite management commands')
+  .addCommand(
+    new Command('list')
+      .description('List all the invites send to users that are still pending')
+      .option('-f, --filter <filter>', 'Filter invites by email')
+      .action(inviteListCommand)
   );
 
 // Provider commands

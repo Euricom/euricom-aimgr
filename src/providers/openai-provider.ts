@@ -1,3 +1,4 @@
+import { Invite } from '@/domain/invite';
 import { User } from '@/domain/user';
 import { BaseAPIClient } from '@/utils/base-api-client';
 import { getEndOfToday, getStartOfCurrentMonth } from '@/utils/dates-utils';
@@ -279,5 +280,15 @@ export class OpenAIProvider extends AIProvider {
     });
 
     return Math.round(usedCredits * 1000) / 1000; // Round to three decimal places
+  }
+
+  async getPendingInvites(): Promise<Invite[]> {
+    const invitesResponse = await this.client.get<ListDto<InviteUserDto>>('/invites?limit=100');
+    const pendingInvites = invitesResponse.data.filter(invite => invite.status === 'pending');
+    return pendingInvites.map(invite => ({
+      email: invite.email,
+      status: 'pending',
+      provider: this.getName(),
+    }));
   }
 }
