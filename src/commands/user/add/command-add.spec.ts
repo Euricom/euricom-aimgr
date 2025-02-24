@@ -23,10 +23,9 @@ describe('userAddCommand', () => {
     await userAddCommand(options);
 
     // assert
-    expect(mockProvider.isUserMemberOfProvider).toHaveBeenCalledWith(options.email.toLowerCase());
     expect(mockProvider.addUser).toHaveBeenCalledWith(options.email.toLowerCase());
     expect(consola.success).toHaveBeenCalledWith(
-      `User invited successfully for the following providers: ${options.provider}\n Waiting for invite acceptance.`
+      `User invited successfully for the following providers: ${options.provider}\nWaiting for invite acceptance.`
     );
   });
 
@@ -43,16 +42,14 @@ describe('userAddCommand', () => {
     await userAddCommand(options);
 
     // assert
-    expect(consola.error).toHaveBeenCalledWith(`User ${options.email} already exists in all providers`);
+    expect(consola.warn).toHaveBeenCalledWith(
+      `User ${options.email} already exists in the following providers: openai`
+    );
   });
 
-  it('should handle errors gracefully', async () => {
+  -it('should handle errors gracefully', async () => {
     // arrange
-    const mockProvider = {
-      isUserMemberOfProvider: vi.fn().mockRejectedValue(new Error('Error checking membership')),
-      addUser: vi.fn(),
-      getName: vi.fn(),
-    };
+    const mockProvider = 'fake provider';
     (createProvider as Mock).mockReturnValue(mockProvider);
 
     // act

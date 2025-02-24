@@ -1,6 +1,5 @@
 import { User } from '@/domain/user';
 import { BaseAPIClient } from '@/utils/base-api-client';
-import { normalizeEmail, normalizeString } from '@/utils/string-utils';
 import invariant from 'tiny-invariant';
 import { AIProvider } from './ai-provider';
 
@@ -83,23 +82,25 @@ export class AnthropicProvider extends AIProvider {
     return 'anthropic';
   }
 
-  async fetchUserInfo(email: string): Promise<User> {
-    // 1. Get all workspaces
-    const workspacesResponse = await this.client.get<ListDto<WorkspaceDto>>('/workspaces?limit=100');
-    // 2. Look in the workspaces for a workspace that has a name resembling the email
-    const emailParts = normalizeEmail(email);
-    const userWorkspace = workspacesResponse.data.find(workspace => {
-      const workspaceName = normalizeString(workspace.name);
-      return emailParts.every(part => workspaceName.includes(part));
-    });
+  async getUserInfo(email: string): Promise<User | undefined> {
+    // 1. Look if the user is a member of the provider
+    const memberFromProvider = await this.getMemberFromProvider(email);
+    if (!memberFromProvider) return undefined;
 
-    if (!userWorkspace) {
-      return {
-        email,
-        name: '',
-        providers: [],
-      };
-    }
+    // 2. Get the workspaces
+    const workspacesResponse = await this.client.get<ListDto<WorkspaceDto>>('/workspaces?limit=100');
+
+    // 3. Check if there is a workspace with the same name as the user name
+    const userWorkspace = workspacesResponse.data.find(workspace => workspace.name === memberFromProvider.userName);
+
+    if (!userWorkspace) return undefined;
+
+    // 4. Just to be sure, check if the user is a member of the workspace
+    const usersInWorkspaceResponse = await this.client.get<ListDto<WorkspaceMemberDto>>(
+      `/workspaces/${userWorkspace.id}/members`
+    );
+    const isUserMember = usersInWorkspaceResponse.data.some(user => user.user_id === memberFromProvider.userId);
+    if (!isUserMember) return undefined;
 
     const apiKeysResponses = await this.client.get<ListDto<ApiKeyDto>>(
       `/api_keys?limit=100&workspace_id=${userWorkspace.id}&status=active`
@@ -109,7 +110,7 @@ export class AnthropicProvider extends AIProvider {
 
     return {
       email,
-      name: userWorkspace.name.toLowerCase(), // Assuming name is not available, adjust as needed
+      name: memberFromProvider.userName,
       providers: [
         {
           creditsUsed: 0,
@@ -124,87 +125,77 @@ export class AnthropicProvider extends AIProvider {
     };
   }
 
-  async fetchUsers(): Promise<User[]> {
-    const organizationMembersResponse = await this.client.get<ListDto<UserDto>>('/users?limit=100');
+  async getUsers(): Promise<User[]> {
+    const organizationMembers = await this.client.get<ListDto<UserDto>>('/users?limit=100');
 
-    const users = organizationMembersResponse.data.map(user => ({
+    return organizationMembers.data.map(user => ({
       email: user.email,
       name: user.name,
       providers: [{ name: this.getName() }],
     }));
-
-    return users;
-  }
-
-  async isUserMemberOfProvider(email: string): Promise<boolean> {
-    const organizationMembersResponse = await this.client.get<ListDto<UserDto>>('/users?limit=100');
-    return organizationMembersResponse.data.some(user => user.email.toLowerCase() === email);
-  }
-
-  async assignUser(email: string): Promise<boolean> {
-    const organizationMembersResponse = await this.client.get<ListDto<UserDto>>('/users?limit=100');
-    const user = organizationMembersResponse.data.find(user => user.email === email);
-
-    if (!user) return false;
-
-    const isAlreadyAssigned = await this.isUserAssignedToProvider(email);
-    if (isAlreadyAssigned) return true;
-
-    // TODO: if not already assigned we need to create a workspace
-    const createWorkspaceResponse = await this.client.post<WorkspaceDto>('/workspaces', {
-      name: user.name,
-    });
-
-    await this.client.post<WorkspaceMemberDto>(`/workspaces/${createWorkspaceResponse.id}/members`, {
-      user_id: user.id,
-      workspace_role: 'workspace_developer',
-    });
-
-    return true;
   }
 
   async addUser(email: string): Promise<boolean> {
-    const organizationMembersResponse = await this.client.get<ListDto<UserDto>>('/users?limit=100');
-    const userExists = organizationMembersResponse.data.some(user => user.email.toLowerCase() === email);
+    const userExists = await this.isUserMemberOfProvider(email);
 
     if (!userExists) {
       await this.client.post<InviteUserDto>('/invites', { email, role: 'user' });
       return true; // User invited successfully
     }
+
     return false; // User already exists
+  }
+
+  async assignUser(userId: string, userName: string): Promise<boolean> {
+    const createWorkspaceResponse = await this.client.post<WorkspaceDto>('/workspaces', {
+      name: userName,
+    });
+
+    if (createWorkspaceResponse.id) {
+      await this.client.post<WorkspaceMemberDto>(`/workspaces/${createWorkspaceResponse.id}/members`, {
+        user_id: userId,
+        workspace_role: 'workspace_developer',
+      });
+      return true;
+    }
+
+    return false;
+  }
+
+  async getMemberFromProvider(
+    email: string
+  ): Promise<{ providerName: string; userName: string; userId: string } | undefined> {
+    const { data } = await this.client.get<ListDto<UserDto>>(`/users?email=${email}`);
+    const user = data.find(({ email: userEmail }) => userEmail === email);
+    return user
+      ? {
+          providerName: this.getName(),
+          userName: user.name,
+          userId: user.id,
+        }
+      : undefined;
   }
 
   async isUserInvitePending(email: string): Promise<boolean> {
     const invitesResponse = await this.client.get<ListDto<InviteUserDto>>('/invites?limit=100');
     // TODO: check if the email is in the invites list, and if it is status pending, then we need to return the invite url
     const invite = invitesResponse.data.find(invite => invite.email === email && invite.status === 'pending');
+
     return invite !== undefined;
   }
 
-  private async isUserAssignedToProvider(email: string): Promise<boolean> {
+  async isUserMemberOfProvider(email: string): Promise<boolean> {
+    const { data } = await this.client.get<ListDto<UserDto>>(`/users?email=${email}`);
+    return data.length > 0; // More concise check for membership
+  }
+
+  async isUserAssignedToProvider(userId: string, userName: string): Promise<boolean> {
     const workspacesResponse = await this.client.get<ListDto<WorkspaceDto>>('/workspaces?limit=100');
-    // TODO: check if the user (email) is assigned to any of the workspaces , use the normalizeEmail function to normalize the email and compare it with the workspace name
-    const emailParts = normalizeEmail(email);
-    const userWorkspace = workspacesResponse.data.find(workspace => {
-      const workspaceName = normalizeString(workspace.name);
-      return emailParts.every(part => workspaceName.includes(part));
-    });
-
+    const userWorkspace = workspacesResponse.data.find(workspace => workspace.name === userName);
     if (!userWorkspace) return false;
-
-    // TODO: double check if the user is assigned to the workspace by fetching the users in the workspace and checking if the email is in the list
     const usersInWorkspaceResponse = await this.client.get<ListDto<WorkspaceMemberDto>>(
-      `/workspaces/${userWorkspace.id}/members?limit=20`
+      `/workspaces/${userWorkspace.id}/members`
     );
-
-    // TODO: we get workspace_members with user_id, we need to fetch the get user for each user_id and check if the email is in the list
-    const users: UserDto[] = await Promise.all(
-      usersInWorkspaceResponse.data.map(async user => {
-        const userResponse = await this.client.get<UserDto>(`/users/${user.user_id}`);
-        return userResponse;
-      })
-    );
-
-    return users.some(user => user.email.toLowerCase() === email);
+    return usersInWorkspaceResponse.data.some(user => user.user_id === userId);
   }
 }

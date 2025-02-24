@@ -10,30 +10,38 @@ interface AssignOptions {
 
 export async function userAssignCommand(options: AssignOptions) {
   try {
-    loading.start('Assigning user...');
     invariant(options.email.includes('@'), 'Invalid email format. Email must contain "@"');
-
-    // Get providers from options
-    const requestedProviders = (options.provider?.split(',').filter(p => p !== '') as ProviderType[]) || [];
+    const requestedProviders = options.provider ? options.provider.split(' ').map(p => p.trim() as ProviderType) : [];
     const aiProviders = requestedProviders.map(provider => createProvider(provider as ProviderType));
 
-    // Check if the user is a member of the organization in the requested providers
+    // loop through all the requested providers and check if the user exists in the provider
+    const assignedProviders: string[] = [];
     for (const aiProvider of aiProviders) {
-      const isUserMemberOfProvider = await aiProvider.isUserMemberOfProvider(options.email.toLowerCase());
-      if (!isUserMemberOfProvider) {
-        consola.error(
-          `User ${options.email} is not a member of ${aiProvider.getName()}.\nPlease add the user to the organization in ${aiProvider.getName()} first.`
-        );
-        return;
+      loading.start(`Assigning user to ${aiProvider.getName()}...`);
+      const userMember = await aiProvider.getMemberFromProvider(options.email);
+      if (!userMember) {
+        consola.warn(`User ${options.email} is not a member of ${aiProvider.getName()}.`);
+        continue;
+      }
+
+      // check if the user is already assigned to the provider (it already has a workspace or project)
+      const isUserAssigned = await aiProvider.isUserAssignedToProvider(userMember.userId, userMember.userName);
+      if (isUserAssigned) {
+        consola.warn(`User ${options.email} is already assigned to ${aiProvider.getName()}.`);
+        continue;
+      }
+
+      // assign the user to the provider (creates a workspace (if anthropic) or project (if openai))
+      const assignResult = await aiProvider.assignUser(userMember.userId, userMember.userName);
+      if (assignResult) {
+        assignedProviders.push(aiProvider.getName());
+      } else {
+        consola.warn(`Failed to assign user ${options.email} to ${aiProvider.getName()}.`);
       }
     }
 
-    // Assign user to remaining providers
-    for (const aiProvider of aiProviders) {
-      const isAssigned = await aiProvider.assignUser(options.email.toLowerCase());
-      if (isAssigned) {
-        consola.success(`User ${options.email} successfully assigned to ${aiProvider.getName()}.`);
-      }
+    if (assignedProviders.length > 0) {
+      consola.success(`User ${options.email} was assigned to: ${assignedProviders.join(', ')}`);
     }
   } catch (error) {
     consola.error(error);

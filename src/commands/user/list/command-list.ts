@@ -3,6 +3,7 @@ import { createProvider } from '@/providers/ai-provider-factory';
 import * as store from '@/store';
 import { displayTable } from '@/utils/display-table';
 import * as loading from '@/utils/loading';
+import chalk from 'chalk';
 import { consola } from 'consola';
 
 interface ListOptions {
@@ -19,7 +20,7 @@ export async function userListCommand(options: ListOptions) {
     // Fetch from providers if store is empty or sync is requested
     if (users.length === 0 || options.sync) {
       const aiProviders = [createProvider('openai'), createProvider('anthropic')];
-      const usersFromProviders = await Promise.all(aiProviders.map(aiProvider => aiProvider.fetchUsers()));
+      const usersFromProviders = await Promise.all(aiProviders.map(aiProvider => aiProvider.getUsers()));
       users = mergeUsers(usersFromProviders);
       store.set('users', users);
     }
@@ -30,16 +31,17 @@ export async function userListCommand(options: ListOptions) {
     }
 
     // Display the user list
-    consola.log(`\nUser List (${users.length}):`);
+    consola.log(chalk.underline.cyan('\nUser List:'));
     displayTable(
       (() => {
         if (users.length > 0) {
           return users.map(user => ({
-            ...user,
-            providers: user.providers.map(provider => provider.name).join(', '),
+            email: user.email,
+            name: user.name,
+            'member of?': user.providers.map(provider => provider.name).join(', '),
           }));
         }
-        return [{ email: '-', name: '-', providers: '-' }];
+        return [{ email: '/', name: '/', 'member of?': '/' }];
       })()
     );
   } catch (error) {

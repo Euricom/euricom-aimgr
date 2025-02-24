@@ -1,7 +1,6 @@
 import { User } from '@/domain/user';
 import { BaseAPIClient } from '@/utils/base-api-client';
 import { getEndOfToday, getStartOfCurrentMonth } from '@/utils/dates-utils';
-import { normalizeEmail, normalizeString } from '@/utils/string-utils';
 import invariant from 'tiny-invariant';
 import { AIProvider } from './ai-provider';
 
@@ -87,6 +86,15 @@ interface InviteUserDto {
     role: string;
   }[];
 }
+
+interface ProjectUserDto {
+  object: 'organization.project.user';
+  id: string;
+  email: string;
+  role: string;
+  added_at: number;
+}
+
 class OpenAIClient extends BaseAPIClient {
   constructor(apiKey: string) {
     super('https://api.openai.com/v1/organization', {
@@ -108,24 +116,24 @@ export class OpenAIProvider extends AIProvider {
     return 'openai';
   }
 
-  async fetchUserInfo(email: string): Promise<User> {
-    // Get all the projects
+  async getUserInfo(email: string): Promise<User | undefined> {
+    // 1. Look if the user is a member of the provider
+    const memberFromProvider = await this.getMemberFromProvider(email);
+    if (!memberFromProvider) return undefined;
+
+    // 2. Get the projects
     const projectsResponse = await this.client.get<ListDto<ProjectDto>>('/projects?limit=100');
 
-    const emailParts = normalizeEmail(email);
-    const userProject = projectsResponse.data.find(project => {
-      const projectName = normalizeString(project.name);
-      return emailParts.every(part => projectName.includes(part));
-    });
+    // 3. Check if there is a project with the same name as the user name
+    const userProject = projectsResponse.data.find(project => project.name === memberFromProvider.userName);
+    if (!userProject) return undefined;
 
-    if (!userProject) {
-      return {
-        email: email,
-        name: '',
-        providers: [],
-      };
-    }
+    // 4. Check if the user is a member of the project
+    const usersInProjectResponse = await this.client.get<ListDto<ProjectUserDto>>(`/projects/${userProject.id}/users`);
+    const isUserMember = usersInProjectResponse.data.some(user => user.id === memberFromProvider.userId);
+    if (!isUserMember) return undefined;
 
+    // 5. Get the api keys
     const apiKeysResponses = await this.client.get<ListDto<ProjectApiKeyDto>>(
       `/projects/${userProject.id}/api_keys?limit=100`
     );
@@ -136,10 +144,10 @@ export class OpenAIProvider extends AIProvider {
 
     return {
       email,
-      name: userProject.name.toLowerCase(),
+      name: memberFromProvider.userName,
       providers: [
         {
-          creditsUsed: usedCredits,
+          creditsUsed: usedCredits || 0,
           setLimitUrl: `https://platform.openai.com/settings/${userProject.id}/limits`,
           name: this.getName(),
           apiKeys: apiKeys.map(key => ({
@@ -151,48 +159,18 @@ export class OpenAIProvider extends AIProvider {
     };
   }
 
-  async fetchUsers(): Promise<User[]> {
+  async getUsers(): Promise<User[]> {
     const organizationMembersResponse = await this.client.get<ListDto<UserDto>>('/users?limit=100');
 
-    const users = organizationMembersResponse.data.map(user => ({
+    return organizationMembersResponse.data.map(user => ({
       email: user.email,
       name: user.name,
       providers: [{ name: this.getName() }],
     }));
-
-    return users;
-  }
-
-  async isUserMemberOfProvider(email: string): Promise<boolean> {
-    const organizationMembersResponse = await this.client.get<ListDto<UserDto>>('/users?limit=100');
-    return organizationMembersResponse.data.some(user => user.email.toLowerCase() === email);
-  }
-
-  async assignUser(email: string): Promise<boolean> {
-    const organizationUsersResponse = await this.client.get<ListDto<UserDto>>('/users?limit=100');
-    const user = organizationUsersResponse.data.find(user => user.email === email);
-
-    if (!user) return false;
-
-    const isAssigned = await this.isUserAssignedToProvider(email);
-    if (isAssigned) return true;
-
-    const createProjectResponse = await this.client.post<ProjectDto>('/projects', { name: user.name });
-
-    if (createProjectResponse.status === 'active') {
-      await this.client.post<UserDto>(`/projects/${createProjectResponse.id}/users`, {
-        user_id: user.id,
-        role: 'member',
-      });
-      return true;
-    }
-
-    return false;
   }
 
   async addUser(email: string): Promise<boolean> {
-    const organizationUsersResponse = await this.client.get<ListDto<UserDto>>('/users?limit=100');
-    const userExists = organizationUsersResponse.data.some(user => user.email === email);
+    const userExists = await this.isUserMemberOfProvider(email);
 
     if (!userExists) {
       await this.client.post<InviteUserDto>('/invites', { email, role: 'reader' });
@@ -202,12 +180,56 @@ export class OpenAIProvider extends AIProvider {
     return false; // User already exists
   }
 
+  async assignUser(userId: string, userName: string): Promise<boolean> {
+    const createProjectResponse = await this.client.post<ProjectDto>('/projects', {
+      name: userName,
+    });
+
+    if (createProjectResponse.id) {
+      await this.client.post<ProjectUserDto>(`/projects/${createProjectResponse.id}/users`, {
+        user_id: userId,
+        role: 'member',
+      });
+      return true;
+    }
+
+    return false;
+  }
+
+  async getMemberFromProvider(
+    email: string
+  ): Promise<{ providerName: string; userName: string; userId: string } | undefined> {
+    const organizationMembersResponse = await this.client.get<ListDto<UserDto>>('/users?limit=100');
+    const user = organizationMembersResponse.data.find(user => user.email === email);
+    if (!user) return undefined;
+    return {
+      providerName: this.getName(),
+      userName: user.name,
+      userId: user.id,
+    };
+  }
+
   async isUserInvitePending(email: string): Promise<boolean> {
     const invitesResponse = await this.client.get<ListDto<InviteUserDto>>('/invites?limit=100');
     return invitesResponse.data.some(invite => invite.email === email && invite.status === 'pending');
   }
 
-  private async fetchUsedCredits(userProjectId: string): Promise<number> {
+  async isUserMemberOfProvider(email: string): Promise<boolean> {
+    const { data } = await this.client.get<ListDto<UserDto>>(
+      `/users?emails[]=${encodeURIComponent(email.toLowerCase())}`
+    );
+    return data.length > 0;
+  }
+
+  async isUserAssignedToProvider(userId: string, userName: string): Promise<boolean> {
+    const projectsResponse = await this.client.get<ListDto<ProjectDto>>('/projects?limit=100');
+    const userProject = projectsResponse.data.find(project => project.name === userName);
+    if (!userProject) return false;
+    const usersInProjectResponse = await this.client.get<ListDto<ProjectUserDto>>(`/projects/${userProject.id}/users`);
+    return usersInProjectResponse.data.some(user => user.id === userId);
+  }
+
+  private async fetchUsedCredits(userProjectId: string): Promise<number | undefined> {
     const params = new URLSearchParams({
       start_time: getStartOfCurrentMonth(), // Get start of the current month (1st day of the month at 00:00:00)
       end_time: getEndOfToday(), // get end of today
@@ -228,21 +250,5 @@ export class OpenAIProvider extends AIProvider {
     });
 
     return Math.round(usedCredits * 1000) / 1000; // Round to three decimal places
-  }
-
-  private async isUserAssignedToProvider(email: string): Promise<boolean> {
-    const projectsResponse = await this.client.get<ListDto<ProjectDto>>('/projects?limit=100');
-    // TODO: check if the user (email) is assigned to any of the projects , use the normalizeEmail function to normalize the email and compare it with the project name
-    const emailParts = normalizeEmail(email);
-    const userProject = projectsResponse.data.find(project => {
-      const projectName = normalizeString(project.name);
-      return emailParts.every(part => projectName.includes(part));
-    });
-
-    if (!userProject) return false;
-
-    // TODO: double check if the user is assigned to the project by fetching the users in the project and checking if the email is in the list
-    const usersInProjectResponse = await this.client.get<ListDto<UserDto>>(`/projects/${userProject.id}/users`);
-    return usersInProjectResponse.data.some(user => user.email.toLowerCase() === email);
   }
 }

@@ -13,41 +13,42 @@ export async function userAddCommand(options: AddOptions) {
     loading.start('Adding user...');
 
     invariant(options.email.includes('@'), 'Invalid email format. Email must contain "@"');
-
-    // Get providers from options or use all available providers
-    const requestedProviders = (options.provider?.split(',').filter(p => p !== '') as ProviderType[]) || [];
+    const requestedProviders = options.provider ? options.provider.split(' ').map(p => p.trim() as ProviderType) : [];
     const aiProviders = requestedProviders.map(provider => createProvider(provider as ProviderType));
 
-    // Check if the user already exists in all providers
-    let alreadyExistingProviders: string[] = [];
-    for (const aiProvider of aiProviders) {
-      const isUserMemberOfProvider = await aiProvider.isUserMemberOfProvider(options.email.toLowerCase());
-      if (isUserMemberOfProvider) {
-        alreadyExistingProviders.push(aiProvider.getName());
+    // Check if the user already exists in the requestedProviders and add the user to the providers
+    const addUserResults = await Promise.all(
+      aiProviders.map(aiProvider => aiProvider.addUser(options.email.toLowerCase()))
+    );
+
+    const existingProviders: string[] = [];
+    const invitedProviders: string[] = [];
+
+    // Determine which providers the user already exists in and which invites were sent
+    aiProviders.forEach((aiProvider, index) => {
+      if (addUserResults[index]) {
+        invitedProviders.push(aiProvider.getName());
+      } else {
+        existingProviders.push(aiProvider.getName());
       }
+    });
+
+    // Log messages for existing users
+    if (existingProviders.length > 0) {
+      consola.warn(`User ${options.email} already exists in the following providers: ${existingProviders.join(', ')}`);
     }
 
-    // If the user already exists in all providers, we can't add them
-    if (alreadyExistingProviders.length === aiProviders.length) {
-      consola.error(`User ${options.email} already exists in all providers`);
+    // Log messages for invites sent
+    if (invitedProviders.length > 0) {
+      consola.success(
+        `User invited successfully for the following providers: ${invitedProviders.join(', ')}\nWaiting for invite acceptance.`
+      );
+    }
+
+    // If the user exists in all providers, exit early
+    if (existingProviders.length === aiProviders.length) {
       return;
     }
-
-    // If the user already exists in some providers, we only need to add the requested provider that is not already added
-    const filteredProviders = requestedProviders.filter(provider => !alreadyExistingProviders.includes(provider));
-
-    const hasUserBeenAdded = await Promise.all(
-      filteredProviders.map(provider => createProvider(provider as ProviderType).addUser(options.email.toLowerCase()))
-    );
-
-    if (!hasUserBeenAdded) {
-      consola.error(`User ${options.email} already exists in all providers`);
-      return;
-    }
-
-    consola.success(
-      `User invited successfully for the following providers: ${filteredProviders.join(', ')}\n Waiting for invite acceptance.`
-    );
   } catch (error) {
     consola.error(error);
   } finally {
