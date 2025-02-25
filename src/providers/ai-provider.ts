@@ -1,3 +1,4 @@
+import { Invite } from '@/domain/invite';
 import { User } from '@/domain/user';
 
 // Base provider can implement the interfaces it supports
@@ -14,4 +15,5 @@ export abstract class AIProvider {
   abstract isUserInvitePending(email: string): Promise<boolean>;
   abstract isUserMemberOfProvider(email: string): Promise<boolean>;
   abstract isUserAssignedToProvider(userId: string, userName: string): Promise<boolean>;
+  abstract getInvites(): Promise<Invite[]>;
 }

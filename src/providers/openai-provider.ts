@@ -1,3 +1,4 @@
+import { Invite } from '@/domain/invite';
 import { User } from '@/domain/user';
 import { BaseAPIClient } from '@/utils/base-api-client';
 import { getEndOfToday, getStartOfCurrentMonth } from '@/utils/dates-utils';
@@ -46,7 +47,7 @@ interface CostResult {
     value: number;
     currency: 'usd';
   };
-  project_id: string | null;
+  project_id?: string;
 }
 
 interface CostBucket {
@@ -60,7 +61,7 @@ interface CostDto {
   object: 'page';
   data: CostBucket[];
   has_more: boolean;
-  next_page: string | null;
+  next_page?: string;
 }
 
 interface UserDto {
@@ -80,7 +81,7 @@ interface InviteUserDto {
   status: string;
   invited_at: number;
   expires_at: number;
-  accepted_at: number | null;
+  accepted_at?: number;
   projects: {
     id: string;
     role: string;
@@ -279,5 +280,15 @@ export class OpenAIProvider extends AIProvider {
     });
 
     return Math.round(usedCredits * 1000) / 1000; // Round to three decimal places
+  }
+
+  async getInvites(): Promise<Invite[]> {
+    const invitesResponse = await this.client.get<ListDto<InviteUserDto>>('/invites?limit=100');
+    return invitesResponse.data.map(invite => ({
+      id: invite.id,
+      email: invite.email,
+      status: invite.status as 'pending' | 'accepted' | 'rejected',
+      provider: this.getName(),
+    }));
   }
 }
