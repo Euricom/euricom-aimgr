@@ -87,6 +87,6 @@ describe('inviteListCommand', () => {
 
     // assert
     expect(consola.log).toHaveBeenCalledWith(expect.stringContaining('Invite List:'));
-    expect(displayTable).toHaveBeenCalledWith([{ email: '/', status: 'No invites', provider: '/' }]); // Assuming this is the empty state
+    expect(displayTable).toHaveBeenCalledWith([{ email: '/', status: '/', provider: '/' }]); // Assuming this is the empty state
   });
 });

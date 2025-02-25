@@ -66,11 +66,6 @@ interface DeleteUserDto {
   type: 'user_deleted';
 }
 
-interface DeleteInviteDto {
-  id: string;
-  type: string;
-}
-
 class AnthropicClient extends BaseAPIClient {
   constructor(apiKey: string, version = '2023-06-01') {
     super('https://api.anthropic.com/v1/organizations', {

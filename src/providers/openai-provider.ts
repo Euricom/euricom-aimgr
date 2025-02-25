@@ -47,7 +47,7 @@ interface CostResult {
     value: number;
     currency: 'usd';
   };
-  project_id: string | null;
+  project_id?: string;
 }
 
 interface CostBucket {
@@ -61,7 +61,7 @@ interface CostDto {
   object: 'page';
   data: CostBucket[];
   has_more: boolean;
-  next_page: string | null;
+  next_page?: string;
 }
 
 interface UserDto {
@@ -81,7 +81,7 @@ interface InviteUserDto {
   status: string;
   invited_at: number;
   expires_at: number;
-  accepted_at: number | null;
+  accepted_at?: number;
   projects: {
     id: string;
     role: string;
@@ -98,12 +98,6 @@ interface ProjectUserDto {
 
 interface DeleteUserDto {
   object: 'organization.user.deleted';
-  id: string;
-  deleted: boolean;
-}
-
-interface DeleteInviteDto {
-  object: 'organization.invite.deleted';
   id: string;
   deleted: boolean;
 }
