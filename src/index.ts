@@ -33,14 +33,14 @@ program
     new Command('add')
       .description('Add a new member to a provider')
       .argument('<email>', "User's email address")
-      .requiredOption('-p, --provider <providers>', 'Comma-separated list of providers (openai, anthropic)')
+      .requiredOption('-p, --provider <providers>', 'Comma-separated list of providers (openai,anthropic)')
       .action(userAddCommand)
   )
   .addCommand(
     new Command('assign')
       .description('Assign a workspace for the provider member to manage API keys')
       .argument('<email>', "User's email address")
-      .requiredOption('-p, --provider <providers>', 'Comma-separated list of providers (openai, anthropic)')
+      .requiredOption('-p, --provider <providers>', 'Comma-separated list of providers (openai,anthropic)')
       .action(userAssignCommand)
   )
   .addCommand(
@@ -53,7 +53,7 @@ program
     new Command('remove')
       .description('Remove member from provider. If no optional provider is provided, all providers will be removed.')
       .argument('<email>', "User's email address")
-      .option('-p, --provider <providers>', 'Comma-separated list of providers (openai, anthropic)')
+      .option('-p, --provider <providers>', 'Comma-separated list of providers (openai,anthropic)')
       .action(userRemoveCommand)
   );
 
@@ -63,7 +63,11 @@ program
   .addCommand(
     new Command('list')
       .description('List all the invites send to users that are still pending')
-      .option('-f, --filter <filter>', 'Filter invites by email')
+      .option('-f, --filter <filter>', 'Filter invites by email or name')
+      .option(
+        '-s, --status <status>',
+        'Filter invites by status (pending, accepted, rejected). Defaults to pending if not provided.'
+      )
       .action(inviteListCommand)
   );
 

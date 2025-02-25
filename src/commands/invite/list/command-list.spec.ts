@@ -1,4 +1,5 @@
 import { createProvider } from '@/providers/ai-provider-factory';
+import { displayTable } from '@/utils/display-table';
 import consola from 'consola';
 import { describe, expect, it, Mock, vi } from 'vitest';
 import { inviteListCommand } from './command-list';
@@ -14,10 +15,16 @@ describe('inviteListCommand', () => {
     { email: 'invite2@example.com', status: 'pending', provider: 'anthropic' },
   ];
 
+  beforeEach(() => {
+    // Clear all mocks before each test
+    vi.clearAllMocks();
+  });
+
   it('should fetch pending invites from providers', async () => {
     // arrange
     const mockProvider = {
-      getPendingInvites: vi.fn().mockResolvedValue(mockInvites),
+      getInvites: vi.fn().mockResolvedValue(mockInvites),
+      getName: vi.fn().mockReturnValue('openai'),
     };
     (createProvider as Mock).mockReturnValue(mockProvider);
 
@@ -25,14 +32,16 @@ describe('inviteListCommand', () => {
     await inviteListCommand({});
 
     // assert
-    expect(mockProvider.getPendingInvites).toHaveBeenCalled();
+    expect(mockProvider.getInvites).toHaveBeenCalled();
     expect(consola.log).toHaveBeenCalledWith(expect.stringContaining('Invite List:'));
+    expect(displayTable).toHaveBeenCalledWith(expect.arrayContaining(mockInvites));
   });
 
   it('should handle errors gracefully', async () => {
     // arrange
     const mockProvider = {
-      getPendingInvites: vi.fn().mockRejectedValue(new Error('Fetch error')),
+      getInvites: vi.fn().mockRejectedValue(new Error('Fetch error')),
+      getName: vi.fn().mockReturnValue('openai'),
     };
     (createProvider as Mock).mockReturnValue(mockProvider);
 
@@ -46,10 +55,12 @@ describe('inviteListCommand', () => {
   it('should merge invites from multiple providers', async () => {
     // arrange
     const mockProvider1 = {
-      getPendingInvites: vi.fn().mockResolvedValue(mockInvites),
+      getInvites: vi.fn().mockResolvedValue(mockInvites),
+      getName: vi.fn().mockReturnValue('openai'),
     };
     const mockProvider2 = {
-      getPendingInvites: vi.fn().mockResolvedValue([]), // No invites from second provider
+      getInvites: vi.fn().mockResolvedValue([]), // No invites from second provider
+      getName: vi.fn().mockReturnValue('anthropic'),
     };
     (createProvider as Mock).mockReturnValueOnce(mockProvider1).mockReturnValueOnce(mockProvider2);
 
@@ -57,8 +68,25 @@ describe('inviteListCommand', () => {
     await inviteListCommand({});
 
     // assert
-    expect(mockProvider1.getPendingInvites).toHaveBeenCalled();
-    expect(mockProvider2.getPendingInvites).toHaveBeenCalled();
+    expect(mockProvider1.getInvites).toHaveBeenCalled();
+    expect(mockProvider2.getInvites).toHaveBeenCalled();
     expect(consola.log).toHaveBeenCalledWith(expect.stringContaining('Invite List:'));
+    expect(displayTable).toHaveBeenCalledWith(expect.arrayContaining(mockInvites));
+  });
+
+  it('should handle no invites gracefully', async () => {
+    // arrange
+    const mockProvider = {
+      getInvites: vi.fn().mockResolvedValue([]), // No invites
+      getName: vi.fn().mockReturnValue('openai'),
+    };
+    (createProvider as Mock).mockReturnValue(mockProvider);
+
+    // act
+    await inviteListCommand({});
+
+    // assert
+    expect(consola.log).toHaveBeenCalledWith(expect.stringContaining('Invite List:'));
+    expect(displayTable).toHaveBeenCalledWith([{ email: '/', status: 'No invites', provider: '/' }]); // Assuming this is the empty state
   });
 });

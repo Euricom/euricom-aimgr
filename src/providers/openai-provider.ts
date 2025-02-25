@@ -102,6 +102,12 @@ interface DeleteUserDto {
   deleted: boolean;
 }
 
+interface DeleteInviteDto {
+  object: 'organization.invite.deleted';
+  id: string;
+  deleted: boolean;
+}
+
 class OpenAIClient extends BaseAPIClient {
   constructor(apiKey: string) {
     super('https://api.openai.com/v1/organization', {
@@ -282,12 +288,12 @@ export class OpenAIProvider extends AIProvider {
     return Math.round(usedCredits * 1000) / 1000; // Round to three decimal places
   }
 
-  async getPendingInvites(): Promise<Invite[]> {
+  async getInvites(): Promise<Invite[]> {
     const invitesResponse = await this.client.get<ListDto<InviteUserDto>>('/invites?limit=100');
-    const pendingInvites = invitesResponse.data.filter(invite => invite.status === 'pending');
-    return pendingInvites.map(invite => ({
+    return invitesResponse.data.map(invite => ({
+      id: invite.id,
       email: invite.email,
-      status: 'pending',
+      status: invite.status as 'pending' | 'accepted' | 'rejected',
       provider: this.getName(),
     }));
   }

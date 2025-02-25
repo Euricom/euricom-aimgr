@@ -15,5 +15,5 @@ export abstract class AIProvider {
   abstract isUserInvitePending(email: string): Promise<boolean>;
   abstract isUserMemberOfProvider(email: string): Promise<boolean>;
   abstract isUserAssignedToProvider(userId: string, userName: string): Promise<boolean>;
-  abstract getPendingInvites(): Promise<Invite[]>;
+  abstract getInvites(): Promise<Invite[]>;
 }

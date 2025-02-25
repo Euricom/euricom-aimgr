@@ -1,5 +1,6 @@
 export interface Invite {
+  id: string;
   email: string;
-  status: 'pending';
+  status: 'pending' | 'accepted' | 'rejected';
   provider: string;
 }

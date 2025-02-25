@@ -66,6 +66,11 @@ interface DeleteUserDto {
   type: 'user_deleted';
 }
 
+interface DeleteInviteDto {
+  id: string;
+  type: string;
+}
+
 class AnthropicClient extends BaseAPIClient {
   constructor(apiKey: string, version = '2023-06-01') {
     super('https://api.anthropic.com/v1/organizations', {
@@ -231,12 +236,12 @@ export class AnthropicProvider extends AIProvider {
     return usersInWorkspaceResponse.data.some(user => user.user_id === userId);
   }
 
-  async getPendingInvites(): Promise<Invite[]> {
+  async getInvites(): Promise<Invite[]> {
     const invitesResponse = await this.client.get<ListDto<InviteUserDto>>('/invites?limit=100');
-    const pendingInvites = invitesResponse.data.filter(invite => invite.status === 'pending');
-    return pendingInvites.map(invite => ({
+    return invitesResponse.data.map(invite => ({
+      id: invite.id,
       email: invite.email,
-      status: 'pending',
+      status: invite.status as 'pending' | 'accepted' | 'rejected',
       provider: this.getName(),
     }));
   }

@@ -8,7 +8,8 @@ export async function userAddCommand(email: string, options: { provider: string 
     loading.start('Adding user...');
 
     invariant(email.includes('@'), 'Invalid email format. Email must contain "@"');
-    const requestedProviders = options.provider ? options.provider.split(' ').map(p => p.trim() as ProviderType) : [];
+    consola.log(options.provider);
+    const requestedProviders = options.provider ? options.provider.split(',').map(p => p.trim() as ProviderType) : [];
     const aiProviders = requestedProviders.map(provider => createProvider(provider as ProviderType));
 
     // Check if the user already exists in the requestedProviders and add the user to the providers
