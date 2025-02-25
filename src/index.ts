@@ -63,10 +63,10 @@ program
   .addCommand(
     new Command('list')
       .description('List all the invites send to users that are still pending')
-      .option('-f, --filter <filter>', 'Filter invites by email or name')
+      .option('-f, --filter <filter>', 'Filter invites by email')
       .option(
         '-s, --status <status>',
-        'Filter invites by status (pending, accepted, rejected). Defaults to pending if not provided.'
+        'Filter invites by status (pending, accepted, rejected, expired). Defaults to pending if not provided.'
       )
       .action(inviteListCommand)
   );

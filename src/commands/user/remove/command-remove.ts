@@ -11,7 +11,7 @@ export async function userRemoveCommand(email: string, options: { provider?: str
 
     // If provider is provided, filter the aiProviders array
     if (options.provider) {
-      const requestedProviders = options.provider.split(' ').map(p => p.trim() as ProviderType);
+      const requestedProviders = options.provider.split(',').map(p => p.trim() as ProviderType);
       aiProviders = requestedProviders.map(provider => createProvider(provider as ProviderType));
     }
 

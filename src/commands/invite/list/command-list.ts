@@ -17,8 +17,11 @@ export async function inviteListCommand(options: ListOptions) {
     // if option status is provided, check if it is valid
     if (options.status) {
       invariant(
-        options.status === 'pending' || options.status === 'accepted' || options.status === 'rejected',
-        'Invalid status. Status must be pending, accepted, or rejected.'
+        options.status === 'pending' ||
+          options.status === 'accepted' ||
+          options.status === 'rejected' ||
+          options.status === 'expired',
+        'Invalid status. Status must be pending, accepted, rejected, or expired.'
       );
     }
 
