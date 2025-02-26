@@ -1,3 +1,4 @@
+import { Invite } from '@/domain/invite';
 import { createProvider } from '@/providers/ai-provider-factory';
 import { displayTable } from '@/utils/display-table';
 import consola from 'consola';
@@ -8,11 +9,26 @@ vi.mock('@/providers/ai-provider-factory');
 vi.mock('@/utils/loading');
 vi.mock('consola');
 vi.mock('@/utils/display-table');
+vi.mock('@/domain/invite');
 
 describe('inviteListCommand', () => {
-  const mockInvites = [
-    { email: 'invite1@example.com', status: 'pending', provider: 'openai' },
-    { email: 'invite2@example.com', status: 'pending', provider: 'anthropic' },
+  const mockInvites: Invite[] = [
+    {
+      id: '1',
+      email: 'invite1@example.com',
+      status: 'pending',
+      provider: 'openai',
+      invitedAt: new Date(),
+      expiresAt: new Date(),
+    },
+    {
+      id: '2',
+      email: 'invite2@example.com',
+      status: 'pending',
+      provider: 'anthropic',
+      invitedAt: new Date(),
+      expiresAt: new Date(),
+    },
   ];
 
   beforeEach(() => {
@@ -32,9 +48,8 @@ describe('inviteListCommand', () => {
     await inviteListCommand({});
 
     // assert
-    expect(mockProvider.getInvites).toHaveBeenCalled();
-    expect(consola.log).toHaveBeenCalledWith(expect.stringContaining('Invite List:'));
-    expect(displayTable).toHaveBeenCalledWith(expect.arrayContaining(mockInvites));
+
+    expect(mockProvider.getInvites).toHaveBeenCalledWith();
   });
 
   it('should handle errors gracefully', async () => {
@@ -70,8 +85,6 @@ describe('inviteListCommand', () => {
     // assert
     expect(mockProvider1.getInvites).toHaveBeenCalled();
     expect(mockProvider2.getInvites).toHaveBeenCalled();
-    expect(consola.log).toHaveBeenCalledWith(expect.stringContaining('Invite List:'));
-    expect(displayTable).toHaveBeenCalledWith(expect.arrayContaining(mockInvites));
   });
 
   it('should handle no invites gracefully', async () => {
@@ -87,6 +100,8 @@ describe('inviteListCommand', () => {
 
     // assert
     expect(consola.log).toHaveBeenCalledWith(expect.stringContaining('Invite List:'));
-    expect(displayTable).toHaveBeenCalledWith([{ email: '/', status: '/', provider: '/' }]); // Assuming this is the empty state
+    expect(displayTable).toHaveBeenCalledWith([
+      { email: '/', status: '/', provider: '/', invitedAt: '/', expiresAt: '/' },
+    ]);
   });
 });

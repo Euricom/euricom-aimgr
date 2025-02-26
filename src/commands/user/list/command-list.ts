@@ -19,9 +19,9 @@ export async function userListCommand(options: ListOptions) {
 
     // Fetch from providers if store is empty or sync is requested
     if (users.length === 0 || options.sync) {
-      const aiProviders = [createProvider('openai'), createProvider('anthropic')];
-      const usersFromProviders = await Promise.all(aiProviders.map(aiProvider => aiProvider.getUsers()));
-      users = mergeUsers(usersFromProviders);
+      const aiProviders = [createProvider('anthropic'), createProvider('openai')];
+      const foundUsers = await Promise.all(aiProviders.map(aiProvider => aiProvider.getUsers()));
+      users = mergeUsers(foundUsers);
       store.set('users', users);
     }
 

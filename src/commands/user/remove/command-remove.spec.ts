@@ -12,12 +12,16 @@ describe('userRemoveCommand', () => {
   const options = { provider: 'openai' };
 
   it('should remove user from provider', async () => {
-    // arrange
     const mockProvider = {
-      getMemberFromProvider: vi.fn().mockResolvedValue({
+      getUserFromProvider: vi.fn().mockResolvedValue({
         userId: '123',
         userName: 'user',
       }),
+      getUserWorkspace: vi.fn().mockResolvedValue({
+        workspaceId: '456',
+        workspaceName: 'workspace',
+      }),
+      removeWorkspace: vi.fn().mockResolvedValue(true),
       removeUser: vi.fn().mockResolvedValue(true),
       getName: vi.fn().mockReturnValue('openai'),
     };
@@ -27,13 +31,14 @@ describe('userRemoveCommand', () => {
     await userRemoveCommand(email, options);
 
     // assert
-    expect(consola.success).toHaveBeenCalledWith(`\nUser ${email} was removed from openai.`);
+    expect(mockProvider.getUserFromProvider).toHaveBeenCalledWith(email);
+    expect(consola.success).toHaveBeenCalledWith(`\n${email} was removed from openai.`);
   });
 
   it('should handle user not a member of provider', async () => {
     // arrange
     const mockProvider = {
-      getMemberFromProvider: vi.fn().mockResolvedValue(undefined),
+      getUserFromProvider: vi.fn().mockResolvedValue(undefined),
       removeUser: vi.fn(),
       getName: vi.fn().mockReturnValue('openai'),
     };
@@ -43,17 +48,21 @@ describe('userRemoveCommand', () => {
     await userRemoveCommand(email, options);
 
     // assert
-    expect(consola.warn).toHaveBeenCalledWith(`\nUser ${email} is not a member of openai.`);
+    expect(consola.warn).toHaveBeenCalledWith(`\n${email} is not a member of openai.`);
   });
 
   it('should handle removal failure', async () => {
-    // arrange
     const mockProvider = {
-      getMemberFromProvider: vi.fn().mockResolvedValue({
+      getUserFromProvider: vi.fn().mockResolvedValue({
         userId: '123',
         userName: 'user',
       }),
-      removeUser: vi.fn().mockResolvedValue(false),
+      removeUser: vi.fn().mockResolvedValue(false), // Simulate removal failure
+      getUserWorkspace: vi.fn().mockResolvedValue({
+        workspaceId: '456',
+        workspaceName: 'workspace',
+      }),
+      removeWorkspace: vi.fn().mockResolvedValue(true), // Assume workspace removal is successful
       getName: vi.fn().mockReturnValue('openai'),
     };
     (createProvider as Mock).mockReturnValue(mockProvider);
@@ -62,7 +71,8 @@ describe('userRemoveCommand', () => {
     await userRemoveCommand(email, options);
 
     // assert
-    expect(consola.warn).toHaveBeenCalledWith(`\nFailed to remove user ${email} from openai.`);
+    expect(mockProvider.getUserFromProvider).toHaveBeenCalledWith(email);
+    expect(consola.warn).toHaveBeenCalledWith(`\nFailed to remove ${email} from openai.`);
   });
 
   it('should handle errors gracefully', async () => {

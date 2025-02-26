@@ -23,8 +23,8 @@ describe('userInfoCommand', () => {
   it('should fetch user info and update store', async () => {
     // arrange
     const mockProvider = {
-      isUserInvitePending: vi.fn().mockResolvedValue(false),
-      getUserInfo: vi.fn().mockResolvedValue(mockUser),
+      getUserPendingInvite: vi.fn().mockResolvedValue(undefined),
+      getUserDetails: vi.fn().mockResolvedValue(mockUser),
       getName: vi.fn().mockReturnValue('openai'),
     };
     (createProvider as Mock).mockReturnValue(mockProvider);
@@ -40,8 +40,14 @@ describe('userInfoCommand', () => {
   it('should handle pending invites', async () => {
     // arrange
     const mockProvider = {
-      isUserInvitePending: vi.fn().mockResolvedValue(true),
-      getUserInfo: vi.fn().mockResolvedValue(mockUser),
+      getUserPendingInvite: vi.fn().mockResolvedValue({
+        email: 'user@example.com',
+        provider: 'anthropic',
+        invitedAt: new Date(),
+        expiresAt: new Date(),
+        id: '1',
+      }),
+      getUserDetails: vi.fn().mockResolvedValue(mockUser),
       getName: vi.fn().mockReturnValue('openai'),
     };
     (createProvider as Mock).mockReturnValue(mockProvider);
@@ -50,14 +56,14 @@ describe('userInfoCommand', () => {
     await userInfoCommand('user@example.com');
 
     // assert
-    expect(consola.warn).toHaveBeenCalledWith(expect.stringContaining('pending invites'));
+    expect(consola.warn).toHaveBeenCalledWith(expect.stringContaining('has a pending invite'));
   });
 
   it('should handle user not found', async () => {
     // arrange
     const mockProvider = {
-      isUserInvitePending: vi.fn().mockResolvedValue(false),
-      getUserInfo: vi.fn().mockResolvedValue(undefined),
+      getUserPendingInvite: vi.fn().mockResolvedValue(undefined),
+      getUserDetails: vi.fn().mockResolvedValue(undefined),
       getName: vi.fn().mockReturnValue('openai'),
     };
     (createProvider as Mock).mockReturnValue(mockProvider);
@@ -77,8 +83,8 @@ describe('userInfoCommand', () => {
       providers: [{ name: 'openai', creditsUsed: 0, apiKeys: [] }],
     };
     const mockProvider = {
-      isUserInvitePending: vi.fn().mockResolvedValue(false),
-      getUserInfo: vi.fn().mockResolvedValue(mockUserNoKeys),
+      getUserPendingInvite: vi.fn().mockResolvedValue(undefined),
+      getUserDetails: vi.fn().mockResolvedValue(mockUserNoKeys),
       getName: vi.fn().mockReturnValue('openai'),
     };
     (createProvider as Mock).mockReturnValue(mockProvider);

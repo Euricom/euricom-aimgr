@@ -5,4 +5,5 @@ export interface Provider {
   creditsUsed?: number;
   apiKeys?: ApiKey[];
   setLimitUrl?: string;
+  workspaceUrl?: string;
 }

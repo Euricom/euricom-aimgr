@@ -9,44 +9,32 @@ import invariant from 'tiny-invariant';
 
 export async function userInfoCommand(email: string) {
   try {
-    loading.start('Loading user info...');
     invariant(email.includes('@'), 'Invalid email format. Email must contain "@"');
-
+    loading.start(`Loading user info for ${email}...`);
     // get the providers that have a pending invite
     const aiProviders = [createProvider('anthropic'), createProvider('openai')];
-    const invitePendingStatus = await Promise.all(
-      aiProviders.map(aiProvider => aiProvider.isUserInvitePending(email.toLowerCase()))
+    const pendingInviteActions = aiProviders.map(async aiProvider => {
+      const pendingInvite = await aiProvider.getUserPendingInvite(email.toLowerCase());
+      if (pendingInvite) {
+        consola.warn(
+          `\n${email} has a pending invite for ${aiProvider.getName()} and waiting for acceptance since ${pendingInvite.invitedAt.toLocaleString()}`
+        );
+      }
+    });
+    await Promise.all(pendingInviteActions);
+
+    // fetch the user info from the providers
+    const userDetailsFromProviders = await Promise.all(
+      aiProviders.map(aiProvider => aiProvider.getUserDetails(email.toLowerCase()))
     );
+    const validUserDetails = userDetailsFromProviders.filter(userDetails => userDetails !== undefined);
 
-    // filter out the providers that have a pending invite
-    const pendingProviders = aiProviders
-      .filter((_, index) => invitePendingStatus[index])
-      .map(aiProvider => aiProvider.getName());
-
-    if (pendingProviders.length > 0) {
-      consola.warn(`User ${email} has pending invites for the following providers: ${pendingProviders.join(', ')}`);
-    }
-
-    // fetch the user info from the providers that don't have a pending invite
-    const userInfoFromProviders = await Promise.all(
-      aiProviders
-        .filter((_, index) => !invitePendingStatus[index])
-        .map(aiProvider => aiProvider.getUserInfo(email.toLowerCase()))
-    );
-
-    // Filter out any undefined results
-    const validUserInfo = userInfoFromProviders.filter(userInfo => userInfo !== undefined);
-
-    // Check if we have any valid user info
-    if (validUserInfo.length === 0) {
-      consola.warn(
-        `User with email ${email} not found in any provider. Please make sure the user is a member of at least one provider.`
-      );
+    if (validUserDetails.length === 0) {
+      consola.warn(`\n${email} not found in any provider`);
       return;
     }
-
     // Merge the user info from the providers into a single user object
-    const mergedUser = mergeUsers(validUserInfo);
+    const mergedUser = mergeUsers(validUserDetails);
     const user = mergedUser[0];
 
     // if user didn't exist yet then add it to the users store, otherwise update the user
@@ -57,22 +45,32 @@ export async function userInfoCommand(email: string) {
     } else {
       users[userIndex] = user;
     }
-
     store.set('users', users);
 
+    // display the user info
     consola.log(chalk.underline.cyan('\n\nUser Info:'));
     consola.log(
       `Email: ${user.email}\nName: ${user.name}\nMember of: ${user.providers.map(provider => provider.name).join(', ')}`
     );
 
-    const providerData = user.providers.map(provider => ({
-      Provider: provider.name,
-      'Credits Used': provider.creditsUsed ? `${provider.creditsUsed} $/month` : '/',
-      'Credits Limit': provider.setLimitUrl ? provider.setLimitUrl : 'Not set',
-    }));
+    const providerData = user.providers
+      .filter(provider => provider.workspaceUrl) // Only include providers with workspace data
+      .map(provider => ({
+        Provider: provider.name,
+        'Credits Used': provider.creditsUsed ? `${provider.creditsUsed} $/month` : '/',
+        'Credits Limit': provider.setLimitUrl ? provider.setLimitUrl : 'Not set',
+      }));
 
-    consola.log(chalk.underline.cyan('\nAssigned Providers:'));
-    displayTable(providerData);
+    consola.log(chalk.underline.cyan('\nAssigned Workspaces:'));
+    displayTable(
+      providerData.length > 0 ? providerData : [{ Provider: '/', 'Credits Used': '/', 'Credits Limit': '/' }]
+    );
+
+    user.providers.forEach(provider => {
+      if (provider.workspaceUrl) {
+        consola.log(`${provider.name} workspace URL: ${provider.workspaceUrl}`);
+      }
+    });
 
     consola.log(chalk.underline.cyan('\nAPI Keys:'));
     const apiKeysData = user.providers.flatMap(provider => {

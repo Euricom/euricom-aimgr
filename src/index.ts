@@ -33,14 +33,14 @@ program
     new Command('add')
       .description('Add a new member to a provider')
       .argument('<email>', "User's email address")
-      .requiredOption('-p, --provider <providers>', 'Comma-separated list of providers (openai,anthropic)')
+      .option('-p, --provider <providers>', 'Comma-separated list of providers (openai,anthropic)')
       .action(userAddCommand)
   )
   .addCommand(
     new Command('assign')
       .description('Assign a workspace for the provider member to manage API keys')
       .argument('<email>', "User's email address")
-      .requiredOption('-p, --provider <providers>', 'Comma-separated list of providers (openai,anthropic)')
+      .option('-p, --provider <providers>', 'Comma-separated list of providers (openai,anthropic)')
       .action(userAssignCommand)
   )
   .addCommand(
