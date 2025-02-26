@@ -3,46 +3,42 @@ import * as loading from '@/utils/loading';
 import consola from 'consola';
 import invariant from 'tiny-invariant';
 
-export async function userAddCommand(email: string, options: { provider: string }) {
+export async function userAddCommand(email: string, options: { provider?: string }) {
   try {
-    loading.start('Adding user...');
-
     invariant(email.includes('@'), 'Invalid email format. Email must contain "@"');
-    consola.log(options.provider);
-    const requestedProviders = options.provider ? options.provider.split(',').map(p => p.trim() as ProviderType) : [];
-    const aiProviders = requestedProviders.map(provider => createProvider(provider as ProviderType));
+    let aiProviders = [createProvider('anthropic'), createProvider('openai')];
 
-    // Check if the user already exists in the requestedProviders and add the user to the providers
-    const addUserResults = await Promise.all(aiProviders.map(aiProvider => aiProvider.addUser(email.toLowerCase())));
+    // If provider is provided, filter the aiProviders array
+    if (options.provider) {
+      const requestedProviders = options.provider.split(' ').map(p => p.trim() as ProviderType);
+      aiProviders = requestedProviders.map(provider => createProvider(provider as ProviderType));
+    }
 
-    const existingProviders: string[] = [];
-    const invitedProviders: string[] = [];
+    const addActions = aiProviders.map(async aiProvider => {
+      loading.start(`Adding ${email} to ${aiProvider.getName()}...`);
+      const foundUser = await aiProvider.getUserFromProvider(email);
+      if (foundUser) {
+        consola.warn(`\n${email} is already a member of ${aiProvider.getName()}.`);
+        return;
+      }
 
-    // Determine which providers the user already exists in and which invites were sent
-    aiProviders.forEach((aiProvider, index) => {
-      if (addUserResults[index]) {
-        invitedProviders.push(aiProvider.getName());
+      const pendingInvite = await aiProvider.getUserPendingInvite(email);
+      if (pendingInvite) {
+        consola.warn(
+          `\n${email} is already invited to ${aiProvider.getName()} and waiting for acceptance since ${pendingInvite.invitedAt.toLocaleString()}`
+        );
+        return;
+      }
+
+      const isAdded = await aiProvider.addUser(email.toLowerCase());
+      if (isAdded) {
+        consola.success(`\n${email} was added to ${aiProvider.getName()} and waiting for acceptance.`);
       } else {
-        existingProviders.push(aiProvider.getName());
+        consola.warn(`\nFailed to add ${email} to ${aiProvider.getName()}.`);
       }
     });
 
-    // Log messages for existing users
-    if (existingProviders.length > 0) {
-      consola.warn(`User ${email} already exists in the following providers: ${existingProviders.join(', ')}`);
-    }
-
-    // Log messages for invites sent
-    if (invitedProviders.length > 0) {
-      consola.success(
-        `User invited successfully for the following providers: ${invitedProviders.join(', ')}\nWaiting for invite acceptance.`
-      );
-    }
-
-    // If the user exists in all providers, exit early
-    if (existingProviders.length === aiProviders.length) {
-      return;
-    }
+    await Promise.all(addActions);
   } catch (error) {
     consola.error(error);
   } finally {

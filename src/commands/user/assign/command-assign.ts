@@ -3,41 +3,44 @@ import * as loading from '@/utils/loading';
 import consola from 'consola';
 import invariant from 'tiny-invariant';
 
-export async function userAssignCommand(email: string, options: { provider: string }) {
+export async function userAssignCommand(email: string, options: { provider?: string }) {
   try {
     invariant(email.includes('@'), 'Invalid email format. Email must contain "@"');
-    const requestedProviders = options.provider ? options.provider.split(',').map(p => p.trim() as ProviderType) : [];
-    const aiProviders = requestedProviders.map(provider => createProvider(provider as ProviderType));
+
+    let aiProviders = [createProvider('anthropic'), createProvider('openai')];
+
+    // If provider is provided, filter the aiProviders array
+    if (options.provider) {
+      const requestedProviders = options.provider.split(' ').map(p => p.trim() as ProviderType);
+      aiProviders = requestedProviders.map(provider => createProvider(provider as ProviderType));
+    }
 
     // loop through all the requested providers and check if the user exists in the provider
-    const assignedProviders: string[] = [];
-    for (const aiProvider of aiProviders) {
+    const assignActions = aiProviders.map(async aiProvider => {
       loading.start(`Assigning user to ${aiProvider.getName()}...`);
-      const userMember = await aiProvider.getMemberFromProvider(email);
-      if (!userMember) {
-        consola.warn(`\nUser ${email} is not a member of ${aiProvider.getName()}.`);
-        continue;
+      const foundUser = await aiProvider.getUserFromProvider(email);
+      if (!foundUser) {
+        consola.warn(`\n${email} is not a member of ${aiProvider.getName()}.`);
+        return;
       }
 
       // check if the user is already assigned to the provider (it already has a workspace or project)
-      const isUserAssigned = await aiProvider.isUserAssignedToProvider(userMember.userId, userMember.userName);
+      const userWorkspace = await aiProvider.getUserWorkspace(foundUser.userId, foundUser.userName);
+      if (userWorkspace) {
+        consola.warn(`\n${email} is already assigned to ${aiProvider.getName()}.`);
+        return;
+      }
+
+      // assign the user to the provider
+      const isUserAssigned = await aiProvider.assignUserToWorkspace(foundUser.userId, foundUser.userName);
       if (isUserAssigned) {
-        consola.warn(`\nUser ${email} is already assigned to ${aiProvider.getName()}.`);
-        continue;
-      }
-
-      // assign the user to the provider (creates a workspace (if anthropic) or project (if openai))
-      const assignResult = await aiProvider.assignUser(userMember.userId, userMember.userName);
-      if (assignResult) {
-        assignedProviders.push(aiProvider.getName());
+        consola.success(`\n${email} was assigned to ${aiProvider.getName()}.`);
       } else {
-        consola.warn(`\nFailed to assign user ${email} to ${aiProvider.getName()}.`);
+        consola.warn(`\nFailed to assign ${email} to ${aiProvider.getName()}.`);
       }
-    }
+    });
 
-    if (assignedProviders.length > 0) {
-      consola.success(`\nUser ${email} was assigned to: ${assignedProviders.join(', ')}`);
-    }
+    await Promise.all(assignActions);
   } catch (error) {
     consola.error(error);
   } finally {

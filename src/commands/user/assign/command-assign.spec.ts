@@ -11,98 +11,92 @@ describe('userAssignCommand', () => {
   const email = 'user@example.com';
   const options = { provider: 'openai' };
 
+  beforeEach(() => {
+    vi.clearAllMocks(); // Reset mocks before each test
+  });
+
   it('should assign user to provider', async () => {
-    // arrange
     const mockProvider = {
       isUserMemberOfProvider: vi.fn().mockResolvedValue(true),
       isUserAssignedToProvider: vi.fn().mockResolvedValue(false),
-      getMemberFromProvider: vi.fn().mockResolvedValue({
+      getUserFromProvider: vi.fn().mockResolvedValue({
         providerName: 'openai',
         userName: 'user',
         userId: '123',
       }),
-      assignUser: vi.fn().mockResolvedValue(true),
+      getUserWorkspace: vi.fn().mockResolvedValue(undefined),
+      assignUserToWorkspace: vi.fn().mockResolvedValue(true),
       getName: vi.fn().mockReturnValue('openai'),
     };
     (createProvider as Mock).mockReturnValue(mockProvider);
 
-    // act
     await userAssignCommand(email, options);
 
-    // assert
-    expect(consola.success).toHaveBeenCalledWith(`\nUser ${email} was assigned to: openai`);
+    expect(consola.success).toHaveBeenCalledWith(`\n${email} was assigned to openai.`);
   });
 
   it('should handle user already assigned', async () => {
-    // arrange
     const mockProvider = {
-      isUserMemberOfProvider: vi.fn().mockResolvedValue(true),
-      isUserAssignedToProvider: vi.fn().mockResolvedValue(true),
-      getMemberFromProvider: vi.fn().mockResolvedValue({
+      isUserMemberOfProvider: vi.fn().mockResolvedValue(true), // User is a member
+      getUserFromProvider: vi.fn().mockResolvedValue({
         providerName: 'openai',
         userName: 'user',
         userId: '123',
       }),
-      assignUser: vi.fn(),
+      getUserWorkspace: vi.fn().mockResolvedValue({
+        workspaceId: '123',
+        workspaceName: 'workspace',
+      }),
+      assignUserToWorkspace: vi.fn().mockResolvedValue(false),
       getName: vi.fn().mockReturnValue('openai'),
     };
     (createProvider as Mock).mockReturnValue(mockProvider);
 
-    // act
     await userAssignCommand(email, options);
 
-    // assert
-    expect(consola.warn).toHaveBeenCalledWith(`\nUser ${email} is already assigned to openai.`);
+    expect(consola.warn).toHaveBeenCalledWith(`\n${email} is already assigned to openai.`);
   });
 
   it('should handle user not a member of provider', async () => {
-    // arrange
     const mockProvider = {
       isUserMemberOfProvider: vi.fn().mockResolvedValue(false),
-      getMemberFromProvider: vi.fn().mockResolvedValue(undefined),
-      assignUser: vi.fn(),
+      getUserFromProvider: vi.fn().mockResolvedValue(undefined),
+      assignUserToWorkspace: vi.fn(),
       getName: vi.fn().mockReturnValue('openai'),
     };
     (createProvider as Mock).mockReturnValue(mockProvider);
 
-    // act
     await userAssignCommand(email, options);
 
-    // assert
-    expect(consola.warn).toHaveBeenCalledWith(`\nUser ${email} is not a member of openai.`);
+    expect(consola.warn).toHaveBeenCalledWith(`\n${email} is not a member of openai.`);
   });
 
   it('should handle assignment failure', async () => {
-    // arrange
     const mockProvider = {
       isUserMemberOfProvider: vi.fn().mockResolvedValue(true),
       isUserAssignedToProvider: vi.fn().mockResolvedValue(false),
-      getMemberFromProvider: vi.fn().mockResolvedValue({
+      getUserFromProvider: vi.fn().mockResolvedValue({
         providerName: 'openai',
         userName: 'user',
         userId: '123',
       }),
-      assignUser: vi.fn().mockResolvedValue(false),
+      getUserWorkspace: vi.fn().mockResolvedValue(undefined),
+      assignUserToWorkspace: vi.fn().mockResolvedValue(false),
       getName: vi.fn().mockReturnValue('openai'),
     };
     (createProvider as Mock).mockReturnValue(mockProvider);
 
-    // act
     await userAssignCommand(email, options);
 
-    // assert
-    expect(consola.warn).toHaveBeenCalledWith(`\nFailed to assign user ${email} to openai.`);
+    expect(consola.warn).toHaveBeenCalledWith(`\nFailed to assign ${email} to openai.`);
   });
 
   it('should handle errors gracefully', async () => {
-    // arrange
     const mockProvider = 'fake provider';
     (createProvider as Mock).mockReturnValue(mockProvider);
 
-    // act
     await userAssignCommand(email, options);
 
-    // assert
     expect(consola.error).toHaveBeenCalled();
   });
 });
