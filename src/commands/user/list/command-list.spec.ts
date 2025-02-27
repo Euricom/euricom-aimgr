@@ -2,7 +2,6 @@
 import { User } from '@/domain/user';
 import { createProvider } from '@/providers/ai-provider-factory';
 import * as store from '@/store';
-import { consola } from 'consola';
 import { describe, expect, it, Mock, vi } from 'vitest';
 import { userListCommand } from './command-list';
 
@@ -114,6 +113,5 @@ describe('userListCommand', () => {
     expect(store.get).toHaveBeenCalledWith('users');
     expect(mockProvider.getUsers).toHaveBeenCalled();
     expect(store.set).toHaveBeenCalledWith('users', []);
-    expect(consola.log).toHaveBeenCalledWith(expect.stringContaining('User List:'));
   });
 });

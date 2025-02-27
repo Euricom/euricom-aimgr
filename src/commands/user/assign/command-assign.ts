@@ -17,33 +17,37 @@ export async function userAssignCommand(email: string, options: { provider?: str
 
     // loop through all the requested providers and check if the user exists in the provider
     const assignActions = aiProviders.map(async aiProvider => {
-      loading.start(`Assigning user to ${aiProvider.getName()}...`);
-      const foundUser = await aiProvider.getUserFromProvider(email);
-      if (!foundUser) {
-        consola.warn(`\n${email} is not a member of ${aiProvider.getName()}.`);
-        return;
-      }
+      try {
+        loading.start(`Assigning user to ${aiProvider.getName()}...`);
+        const foundUser = await aiProvider.getUserFromProvider(email);
+        if (!foundUser) {
+          loading.warn(`${email} is not a member of ${aiProvider.getName()}.`);
+          return;
+        }
 
-      // check if the user is already assigned to the provider (it already has a workspace or project)
-      const userWorkspace = await aiProvider.getUserWorkspace(foundUser.userId, foundUser.userName);
-      if (userWorkspace) {
-        consola.warn(`\n${email} is already assigned to ${aiProvider.getName()}.`);
-        return;
-      }
+        // check if the user is already assigned to the provider (it already has a workspace or project)
+        const userWorkspace = await aiProvider.getUserWorkspace(foundUser.userId, foundUser.userName);
+        if (userWorkspace) {
+          loading.warn(`${email} is already assigned to ${aiProvider.getName()}.`);
+          return;
+        }
 
-      // assign the user to the provider
-      const isUserAssigned = await aiProvider.assignUserToWorkspace(foundUser.userId, foundUser.userName);
-      if (isUserAssigned) {
-        consola.success(`\n${email} was assigned to ${aiProvider.getName()}.`);
-      } else {
-        consola.warn(`\nFailed to assign ${email} to ${aiProvider.getName()}.`);
+        // assign the user to the provider
+        const isUserAssigned = await aiProvider.assignUserToWorkspace(foundUser.userId, foundUser.userName);
+        if (isUserAssigned) {
+          loading.succeed(`Assigned ${email} to ${aiProvider.getName()}.`);
+        } else {
+          loading.fail(`Failed to assign ${email} to ${aiProvider.getName()}.`);
+        }
+      } catch (error) {
+        consola.error(error);
+      } finally {
+        loading.stop();
       }
     });
 
     await Promise.all(assignActions);
   } catch (error) {
     consola.error(error);
-  } finally {
-    loading.stop();
   }
 }

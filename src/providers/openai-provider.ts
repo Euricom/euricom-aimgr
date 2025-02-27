@@ -102,6 +102,12 @@ interface DeleteUserDto {
   deleted: boolean;
 }
 
+interface DeleteInviteDto {
+  object: 'organization.invite.deleted';
+  id: string;
+  deleted: boolean;
+}
+
 class OpenAIClient extends BaseAPIClient {
   constructor(apiKey: string) {
     super('https://api.openai.com/v1/organization', {
@@ -160,18 +166,39 @@ export class OpenAIProvider extends AIProvider {
 
   async getUsers(): Promise<User[]> {
     const users = await this.paginate<UserDto>('/users');
-    return users.map(user => ({
-      email: user.email,
-      name: user.name,
-      providers: [{ name: this.getName() }],
-    }));
+    const projects = await this.paginate<ProjectDto>('/projects');
+
+    const userPromises = users.map(async user => {
+      const userProject = projects.find(project => project.name.toLowerCase() === user.name.toLowerCase());
+      if (userProject) {
+        const isUserMember = await this.isUserAssignedToWorkspace(userProject.id, user.id);
+        if (isUserMember) {
+          return {
+            email: user.email,
+            name: user.name,
+            providers: [
+              { name: this.getName(), workspaceUrl: `https://platform.openai.com/settings/${userProject.id}` },
+            ],
+          };
+        }
+      }
+      // Return a user object with undefined workspaceUrl if not a member
+      return {
+        email: user.email,
+        name: user.name,
+        providers: [{ name: this.getName(), workspaceUrl: undefined }],
+      };
+    });
+
+    const resolvedUsers = await Promise.all(userPromises);
+    return resolvedUsers.filter(user => user !== undefined) as User[]; // Filter out undefined values
   }
 
   async getUserFromProvider(
     email: string
   ): Promise<{ providerName: string; userName: string; userId: string } | undefined> {
     const organizationMembersResponse = await this.paginate<UserDto>('/users');
-    const user = organizationMembersResponse.find(user => user.email === email);
+    const user = organizationMembersResponse.find(user => user.email === email.toLowerCase());
     if (!user) return undefined;
     return {
       providerName: this.getName(),
@@ -182,7 +209,7 @@ export class OpenAIProvider extends AIProvider {
 
   async getUserPendingInvite(email: string): Promise<Invite | undefined> {
     const invitesResponse = await this.paginate<InviteUserDto>('/invites', 100);
-    const invite = invitesResponse.find(invite => invite.email === email && invite.status === 'pending');
+    const invite = invitesResponse.find(invite => invite.email === email.toLowerCase() && invite.status === 'pending');
     if (!invite) return undefined;
 
     return {
@@ -212,7 +239,7 @@ export class OpenAIProvider extends AIProvider {
     userName: string
   ): Promise<{ workspaceName: string; workspaceId: string; workspaceUrl: string } | undefined> {
     const projectsResponse = await this.paginate<ProjectDto>('/projects');
-    const userProject = projectsResponse.find(project => project.name === userName);
+    const userProject = projectsResponse.find(project => project.name.toLowerCase() === userName.toLowerCase());
     if (!userProject) return undefined;
 
     const isUserMember = await this.isUserAssignedToWorkspace(userProject.id, userId);
@@ -236,7 +263,7 @@ export class OpenAIProvider extends AIProvider {
     }));
   }
 
-  async addUser(email: string): Promise<boolean> {
+  async inviteUser(email: string): Promise<boolean> {
     const inviteResponse = await this.client.post<InviteUserDto>('/invites', { email, role: 'reader' });
     return inviteResponse.id !== undefined;
   }
@@ -273,6 +300,11 @@ export class OpenAIProvider extends AIProvider {
     }
 
     return false;
+  }
+
+  async removeInvite(inviteId: string): Promise<boolean> {
+    const { deleted } = await this.client.delete<DeleteInviteDto>(`/invites/${inviteId}`);
+    return deleted;
   }
 
   private async paginate<T>(url: string, limit = 50): Promise<T[]> {

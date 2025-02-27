@@ -9,28 +9,30 @@ import invariant from 'tiny-invariant';
 
 export async function userInfoCommand(email: string) {
   try {
-    invariant(email.includes('@'), 'Invalid email format. Email must contain "@"');
     loading.start(`Loading user info for ${email}...`);
+    invariant(email.includes('@'), 'Invalid email format. Email must contain "@"');
     // get the providers that have a pending invite
     const aiProviders = [createProvider('anthropic'), createProvider('openai')];
     const pendingInviteActions = aiProviders.map(async aiProvider => {
       const pendingInvite = await aiProvider.getUserPendingInvite(email.toLowerCase());
       if (pendingInvite) {
-        consola.warn(
-          `\n${email} has a pending invite for ${aiProvider.getName()} and waiting for acceptance since ${pendingInvite.invitedAt.toLocaleString()}`
+        loading.warn(
+          `${email} has an invite for ${aiProvider.getName()}, pending since ${pendingInvite.invitedAt.toLocaleString()}`
         );
       }
     });
     await Promise.all(pendingInviteActions);
 
     // fetch the user info from the providers
+    loading.start(`Fetching user details for ${email}...`);
     const userDetailsFromProviders = await Promise.all(
       aiProviders.map(aiProvider => aiProvider.getUserDetails(email.toLowerCase()))
     );
+    loading.stop();
     const validUserDetails = userDetailsFromProviders.filter(userDetails => userDetails !== undefined);
 
     if (validUserDetails.length === 0) {
-      consola.warn(`\n${email} not found in any provider`);
+      loading.fail(`${email} not found in any provider`);
       return;
     }
     // Merge the user info from the providers into a single user object
@@ -48,7 +50,7 @@ export async function userInfoCommand(email: string) {
     store.set('users', users);
 
     // display the user info
-    consola.log(chalk.underline.cyan('\n\nUser Info:'));
+    consola.log(chalk.underline.cyan('\nUser Info:'));
     consola.log(
       `Email: ${user.email}\nName: ${user.name}\nMember of: ${user.providers.map(provider => provider.name).join(', ')}`
     );
@@ -58,19 +60,13 @@ export async function userInfoCommand(email: string) {
       .map(provider => ({
         Provider: provider.name,
         'Credits Used': provider.creditsUsed ? `${provider.creditsUsed} $/month` : '/',
-        'Credits Limit': provider.setLimitUrl ? provider.setLimitUrl : 'Not set',
+        'Workspace URL': provider.workspaceUrl ? provider.workspaceUrl : '/',
       }));
 
     consola.log(chalk.underline.cyan('\nAssigned Workspaces:'));
     displayTable(
-      providerData.length > 0 ? providerData : [{ Provider: '/', 'Credits Used': '/', 'Credits Limit': '/' }]
+      providerData.length > 0 ? providerData : [{ Provider: '/', 'Credits Used': '/', 'Workspace URL': '/' }]
     );
-
-    user.providers.forEach(provider => {
-      if (provider.workspaceUrl) {
-        consola.log(`${provider.name} workspace URL: ${provider.workspaceUrl}`);
-      }
-    });
 
     consola.log(chalk.underline.cyan('\nAPI Keys:'));
     const apiKeysData = user.providers.flatMap(provider => {

@@ -16,8 +16,9 @@ export abstract class AIProvider {
     userName: string
   ): Promise<{ workspaceName: string; workspaceId: string; workspaceUrl: string } | undefined>;
   abstract getWorkspaceApiKeys(workspaceId: string): Promise<{ name: string; keyHint: string }[]>;
-  abstract addUser(email: string): Promise<boolean>;
+  abstract inviteUser(email: string): Promise<boolean>;
   abstract assignUserToWorkspace(userId: string, workspaceName: string): Promise<boolean>;
   abstract removeUser(userId: string): Promise<boolean>;
   abstract removeWorkspace(workspaceId: string): Promise<boolean>;
+  abstract removeInvite(inviteId: string): Promise<boolean>;
 }
