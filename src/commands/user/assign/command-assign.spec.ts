@@ -1,4 +1,5 @@
 import { createProvider } from '@/providers/ai-provider-factory';
+import * as loading from '@/utils/loading';
 import consola from 'consola';
 import { describe, expect, it, Mock, vi } from 'vitest';
 import { userAssignCommand } from './command-assign';
@@ -32,7 +33,7 @@ describe('userAssignCommand', () => {
 
     await userAssignCommand(email, options);
 
-    expect(consola.success).toHaveBeenCalledWith(`\n${email} was assigned to openai.`);
+    expect(loading.succeed).toHaveBeenCalledWith(`Assigned ${email} to openai.`);
   });
 
   it('should handle user already assigned', async () => {
@@ -54,7 +55,7 @@ describe('userAssignCommand', () => {
 
     await userAssignCommand(email, options);
 
-    expect(consola.warn).toHaveBeenCalledWith(`\n${email} is already assigned to openai.`);
+    expect(loading.warn).toHaveBeenCalledWith(`${email} is already assigned to openai.`);
   });
 
   it('should handle user not a member of provider', async () => {
@@ -68,7 +69,7 @@ describe('userAssignCommand', () => {
 
     await userAssignCommand(email, options);
 
-    expect(consola.warn).toHaveBeenCalledWith(`\n${email} is not a member of openai.`);
+    expect(loading.warn).toHaveBeenCalledWith(`${email} is not a member of openai.`);
   });
 
   it('should handle assignment failure', async () => {
@@ -88,7 +89,7 @@ describe('userAssignCommand', () => {
 
     await userAssignCommand(email, options);
 
-    expect(consola.warn).toHaveBeenCalledWith(`\nFailed to assign ${email} to openai.`);
+    expect(loading.fail).toHaveBeenCalledWith(`Failed to assign ${email} to openai.`);
   });
 
   it('should handle errors gracefully', async () => {

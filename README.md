@@ -27,14 +27,14 @@ npm install https://github.com/euricom/euricom-aimgr.git --global
 ```bash
 # Run in development mode (with commands)
 pnpm dev user list
-pnpm dev user add --email john@example.com --name "John Doe"
+pnpm dev user invite john@example.com --provider openai
 
 # Build the project
 pnpm build
 
 # Run in production mode (after building)
-pnpm start user list
-pnpm start user add --email john@example.com --name "John Doe"
+aimgr user list
+aimgr user invite john@example.com --provider openai
 
 # Build with watch mode (auto-rebuilds on changes)
 pnpm build:watch
@@ -51,36 +51,35 @@ pnpm format:check  # Check code formatting
 pnpm spell         # Check spelling
 pnpm spell:fix     # Fix spelling errors
 pnpm clean         # Remove build artifacts
+pnpm test          # Run tests
 ```
 
 ## CLI Usage
 
 ```bash
 # Show help and version
-aimgr --help
-aimgr --version
+aimgr --help -h
+aimgr --version -v
 
 # User Management
-aimgr user list                    # List all users
-aimgr user list --filter john      # Filter users by email
-aimgr user info john.doo@euri.com  # Show user details
+aimgr user list                    # List all registered users
+aimgr user list --filter -f <filter>  # Filter users by email
+aimgr user list --sync -s            # Force sync with providers
+aimgr user info <email>            # Show detailed user info
 
-# User Creation and Modification
-aimgr user add --email john.doo@euri.com \
-               --name "John Doo" \
-               [--provider openai,anthropic]
+# User Invite
+aimgr user invite <email> --provider -p <providers>  # Invite a new member to a provider
+# Example: aimgr user invite john@example.com --provider -p openai
 
-aimgr user add-key john.doo@euri.com --provider openai,openrouter,anthropic
-aimgr user set-limit john.doo@euri.com --provider openai --limit 10
+# User Assign to Workspace
+aimgr user assign <email> --provider -p <providers>   # Assign a workspace for the user
+# Example: aimgr user assign john@example.com --provider -p openai
 
-# User Removal and Disabling
-aimgr user disable john.doo@euri.com
-aimgr user remove john.doo@euri.com
-aimgr user remove john.doo@euri.com --provider openai
+# User Removal
+aimgr user remove <email> --provider -p <providers>  # Remove member from provider
+# If no optional provider is provided, all providers will be removed.
+# Example: aimgr user remove john@example.com --provider -p openai
 
-# Provider Management
-aimgr provider list
-aimgr provider set-limit --provider openai --limit 10
 ```
 
 ## Technical Stack
@@ -89,17 +88,37 @@ aimgr provider set-limit --provider openai --limit 10
 
 ```
 src/
-├── commands/      # CLI command implementations
-│   ├── list.ts
-│   ├── create.ts
-├── providers/     # API provider implementations
-│   ├── openai.ts
-│   ├── anthropic.ts
-│   ├── open-router.ts
-├── utils/         # Utility functions
-│   ├── file-utils.ts
-│   ├── logger.ts
-├── cli.ts         # Main CLI entry point
+├── commands/                  # CLI command implementations
+│   ├── user/
+│   │   ├── assign/
+│   │   │   ├── command-assign.ts
+│   │   │   ├── command-assign.spec.ts
+│   │   ├── invite/
+│   │   │   ├── command-invite.ts
+│   │   │   ├── command-invite.spec.ts
+│   │   ├── info/
+│   │   │   ├── command-info.ts
+│   │   │   ├── command-info.spec.ts
+│   │   ├── list/
+│   │   │   ├── command-list.ts
+│   │   │   ├── command-list.spec.ts
+│   │   ├── remove/
+│   │   │   ├── command-remove.ts
+│   │   │   ├── command-remove.spec.ts
+│   │   ├── index.ts
+├── providers/                 # Provider implementations
+│   ├── anthropic-provider.ts
+│   ├── openai-provider.ts
+│   ├── ai-provider-factory.ts
+│   ├── ai-provider.ts
+├── utils/                     # Utility functions
+│   ├── base-api-client.ts
+│   ├── dates-utils.ts
+│   ├── display-table.ts
+│   ├── loading.ts
+├── domain/                    # Domain models
+│   ├── user.ts
+├── index.ts                   # Main CLI entry point
 ```
 
 ### Tools & Requirements
@@ -116,9 +135,9 @@ src/
 
 - CLI Framework: Commander & Inquirer
 - UI Elements:
-  - Colors: picocolors
-  - Spinners: cli-spinners
-  - Console: better-console
+  - Colors: chalk
+  - Loading: ora
+  - Console: consola
   - Tables: cli-table3
 - Development: tsx
 - Debugging: debug

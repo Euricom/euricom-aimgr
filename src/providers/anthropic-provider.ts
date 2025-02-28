@@ -65,6 +65,11 @@ interface DeleteUserDto {
   type: 'user_deleted';
 }
 
+interface DeleteInviteDto {
+  id: string;
+  type: 'invite_deleted';
+}
+
 class AnthropicClient extends BaseAPIClient {
   constructor(apiKey: string, version = '2023-06-01') {
     super('https://api.anthropic.com/v1/organizations', {
@@ -117,17 +122,40 @@ export class AnthropicProvider extends AIProvider {
 
   async getUsers(): Promise<User[]> {
     const users = await this.paginate<UserDto>('/users');
-    return users.map(user => ({
-      email: user.email,
-      name: user.name,
-      providers: [{ name: this.getName() }],
-    }));
+    const projects = await this.paginate<WorkspaceDto>('/workspaces');
+
+    const userPromises = users.map(async user => {
+      const userWorkspace = projects.find(project => project.name.toLowerCase() === user.name.toLowerCase());
+      if (userWorkspace) {
+        const isUserMember = await this.isUserAssignedToWorkspace(userWorkspace.id, user.id);
+        if (isUserMember) {
+          return {
+            email: user.email,
+            name: user.name,
+            providers: [
+              {
+                name: this.getName(),
+                workspaceUrl: `https://console.anthropic.com/settings/workspaces/${userWorkspace.id}`,
+              },
+            ],
+          };
+        }
+      }
+      return {
+        email: user.email,
+        name: user.name,
+        providers: [{ name: this.getName(), workspaceUrl: undefined }],
+      };
+    });
+
+    const resolvedUsers = await Promise.all(userPromises);
+    return resolvedUsers.filter(user => user !== undefined) as User[]; // Filter out undefined values
   }
 
   async getUserFromProvider(
     email: string
   ): Promise<{ providerName: string; userName: string; userId: string } | undefined> {
-    const { data } = await this.client.get<ListDto<UserDto>>(`/users?email=${email}`);
+    const { data } = await this.client.get<ListDto<UserDto>>(`/users?email=${email.toLowerCase()}`);
     const user = data.find(({ email: userEmail }) => userEmail === email);
     return user
       ? {
@@ -141,7 +169,7 @@ export class AnthropicProvider extends AIProvider {
   async getUserPendingInvite(email: string): Promise<Invite | undefined> {
     const invitesResponse = await this.paginate<InviteUserDto>('/invites');
     // TODO: check if the email is in the invites list, and if it is status pending, then we need to return the invite url
-    const invite = invitesResponse.find(invite => invite.email === email && invite.status === 'pending');
+    const invite = invitesResponse.find(invite => invite.email === email.toLowerCase() && invite.status === 'pending');
     if (!invite) return undefined;
 
     return {
@@ -173,10 +201,10 @@ export class AnthropicProvider extends AIProvider {
     userName: string
   ): Promise<{ workspaceName: string; workspaceId: string; workspaceUrl: string } | undefined> {
     const workspacesResponse = await this.paginate<WorkspaceDto>('/workspaces', 100);
-    const userWorkspace = workspacesResponse.find(workspace => workspace.name === userName);
+    const userWorkspace = workspacesResponse.find(workspace => workspace.name.toLowerCase() === userName.toLowerCase());
     if (!userWorkspace) return undefined;
 
-    // TODO: check if the user is a member of the workspace using the isUserAssignedToProvider method
+    // check if the user is a member of the workspace using the isUserAssignedToWorkspace method
     const isUserMember = await this.isUserAssignedToWorkspace(userWorkspace.id, userId);
     if (!isUserMember) return undefined;
 
@@ -198,8 +226,11 @@ export class AnthropicProvider extends AIProvider {
     }));
   }
 
-  async addUser(email: string): Promise<boolean> {
-    const inviteResponse = await this.client.post<InviteUserDto>('/invites', { email, role: 'user' });
+  async inviteUser(email: string): Promise<boolean> {
+    const inviteResponse = await this.client.post<InviteUserDto>('/invites', {
+      email: email.toLowerCase(),
+      role: 'user',
+    });
     return inviteResponse.id !== undefined;
   }
 
@@ -232,6 +263,11 @@ export class AnthropicProvider extends AIProvider {
   async removeWorkspace(workspaceId: string): Promise<boolean> {
     const archiveWorkspaceResponse = await this.client.post<WorkspaceDto>(`/workspaces/${workspaceId}/archive`, {});
     return archiveWorkspaceResponse.id !== undefined;
+  }
+
+  async removeInvite(inviteId: string): Promise<boolean> {
+    const deleteInviteResponse = await this.client.delete<DeleteInviteDto>(`/invites/${inviteId}`);
+    return deleteInviteResponse.id !== undefined;
   }
 
   private async paginate<T>(url: string, limit = 50): Promise<T[]> {

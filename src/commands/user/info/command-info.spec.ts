@@ -1,6 +1,7 @@
 import { User } from '@/domain/user';
 import { createProvider } from '@/providers/ai-provider-factory';
 import * as store from '@/store';
+import * as loading from '@/utils/loading';
 import consola from 'consola';
 import { describe, expect, it, Mock, vi } from 'vitest';
 import { userInfoCommand } from './command-info';
@@ -8,6 +9,7 @@ import { userInfoCommand } from './command-info';
 vi.mock('@/store');
 vi.mock('@/providers/ai-provider-factory');
 vi.mock('consola');
+vi.mock('@/utils/loading');
 
 describe('userInfoCommand', () => {
   const mockUser: User = {
@@ -56,7 +58,7 @@ describe('userInfoCommand', () => {
     await userInfoCommand('user@example.com');
 
     // assert
-    expect(consola.warn).toHaveBeenCalledWith(expect.stringContaining('has a pending invite'));
+    expect(loading.warn).toHaveBeenCalledWith(expect.stringContaining('has an invite'));
   });
 
   it('should handle user not found', async () => {
@@ -72,7 +74,7 @@ describe('userInfoCommand', () => {
     await userInfoCommand('user@example.com');
 
     // assert
-    expect(consola.warn).toHaveBeenCalledWith(expect.stringContaining('not found in any provider'));
+    expect(loading.fail).toHaveBeenCalledWith(expect.stringContaining('not found in any provider'));
   });
 
   it('should handle user with no API keys', async () => {

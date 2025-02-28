@@ -3,10 +3,9 @@ import * as loading from '@/utils/loading';
 import consola from 'consola';
 import invariant from 'tiny-invariant';
 
-export async function userAssignCommand(email: string, options: { provider?: string }) {
+export async function userInviteCommand(email: string, options: { provider?: string }) {
   try {
     invariant(email.includes('@'), 'Invalid email format. Email must contain "@"');
-
     let aiProviders = [createProvider('anthropic'), createProvider('openai')];
 
     // If provider is provided, filter the aiProviders array
@@ -15,30 +14,30 @@ export async function userAssignCommand(email: string, options: { provider?: str
       aiProviders = requestedProviders.map(provider => createProvider(provider as ProviderType));
     }
 
-    // loop through all the requested providers and check if the user exists in the provider
     await Promise.all(
       aiProviders.map(async aiProvider => {
         try {
-          loading.start(`Assigning user to ${aiProvider.getName()}...`);
+          loading.start(`Inviting ${email} to ${aiProvider.getName()}...`);
           const foundUser = await aiProvider.getUserFromProvider(email);
-          if (!foundUser) {
-            loading.warn(`${email} is not a member of ${aiProvider.getName()}.`);
+
+          if (foundUser) {
+            loading.warn(`${email} is already a member of ${aiProvider.getName()}.`);
             return;
           }
 
-          // check if the user is already assigned to the provider (it already has a workspace or project)
-          const userWorkspace = await aiProvider.getUserWorkspace(foundUser.userId, foundUser.userName);
-          if (userWorkspace) {
-            loading.warn(`${email} is already assigned to ${aiProvider.getName()}.`);
+          const pendingInvite = await aiProvider.getUserPendingInvite(email);
+          if (pendingInvite) {
+            loading.warn(
+              `${email} is already invited to ${aiProvider.getName()} and waiting for acceptance since ${pendingInvite.invitedAt.toLocaleString()}`
+            );
             return;
           }
 
-          // assign the user to the provider
-          const isUserAssigned = await aiProvider.assignUserToWorkspace(foundUser.userId, foundUser.userName);
-          if (isUserAssigned) {
-            loading.succeed(`Assigned ${email} to ${aiProvider.getName()}.`);
+          const isInvited = await aiProvider.inviteUser(email.toLowerCase());
+          if (isInvited) {
+            loading.succeed(`Invited ${email} to ${aiProvider.getName()} and waiting for acceptance.`);
           } else {
-            loading.fail(`Failed to assign ${email} to ${aiProvider.getName()}.`);
+            loading.fail(`Failed to invite ${email} to ${aiProvider.getName()}.`);
           }
         } catch (error) {
           consola.error(error);

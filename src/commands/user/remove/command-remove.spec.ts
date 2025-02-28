@@ -1,4 +1,5 @@
 import { createProvider } from '@/providers/ai-provider-factory';
+import * as loading from '@/utils/loading';
 import consola from 'consola';
 import { describe, expect, it, Mock, vi } from 'vitest';
 import { userRemoveCommand } from './command-remove';
@@ -32,7 +33,7 @@ describe('userRemoveCommand', () => {
 
     // assert
     expect(mockProvider.getUserFromProvider).toHaveBeenCalledWith(email);
-    expect(consola.success).toHaveBeenCalledWith(`\n${email} was removed from openai.`);
+    expect(loading.succeed).toHaveBeenCalledWith(`Removed ${email} from openai.`);
   });
 
   it('should handle user not a member of provider', async () => {
@@ -48,7 +49,7 @@ describe('userRemoveCommand', () => {
     await userRemoveCommand(email, options);
 
     // assert
-    expect(consola.warn).toHaveBeenCalledWith(`\n${email} is not a member of openai.`);
+    expect(loading.warn).toHaveBeenCalledWith(`${email} is not a member of openai.`);
   });
 
   it('should handle removal failure', async () => {
@@ -72,7 +73,7 @@ describe('userRemoveCommand', () => {
 
     // assert
     expect(mockProvider.getUserFromProvider).toHaveBeenCalledWith(email);
-    expect(consola.warn).toHaveBeenCalledWith(`\nFailed to remove ${email} from openai.`);
+    expect(loading.fail).toHaveBeenCalledWith(`Failed to remove ${email} from openai.`);
   });
 
   it('should handle errors gracefully', async () => {
