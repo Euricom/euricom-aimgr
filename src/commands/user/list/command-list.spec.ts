@@ -1,15 +1,32 @@
 // existing imports...
 import { User } from '@/domain/user';
-import { createProvider } from '@/providers/ai-provider-factory';
+import { AIProvider } from '@/providers/ai-provider';
 import * as store from '@/store';
-import { describe, expect, it, Mock, vi } from 'vitest';
+import { beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import { userListCommand } from './command-list';
 
+let mockAIProvider: AIProvider = {
+  getName: vi.fn().mockReturnValue('mockProvider'),
+  getUserDetails: vi.fn().mockResolvedValue(undefined),
+  getUsers: vi.fn().mockResolvedValue([]),
+  getUserFromProvider: vi.fn().mockResolvedValue(undefined),
+  getUserPendingInvite: vi.fn().mockResolvedValue(undefined),
+  getInvites: vi.fn().mockResolvedValue([]),
+  getUserWorkspace: vi.fn().mockResolvedValue(undefined),
+  getWorkspaceApiKeys: vi.fn().mockResolvedValue([]),
+  inviteUser: vi.fn().mockResolvedValue(false),
+  assignUserToWorkspace: vi.fn().mockResolvedValue(false),
+  removeUser: vi.fn().mockResolvedValue(false),
+  removeWorkspace: vi.fn().mockResolvedValue(false),
+  removeInvite: vi.fn().mockResolvedValue(false),
+};
+
+// Mock the entire module and provide a custom implementation for createProvider
+vi.mock('@/providers/ai-provider-factory', () => ({
+  createProvider: vi.fn(() => mockAIProvider),
+}));
+
 vi.mock('@/store');
-vi.mock('@/providers/ai-provider-factory');
-vi.mock('@/utils/display-table');
-vi.mock('@/utils/loading');
-vi.mock('consola');
 
 describe('userListCommand', () => {
   let mockUsers: User[] = [];
@@ -24,35 +41,28 @@ describe('userListCommand', () => {
   it('should fetch users from providers when store is empty', async () => {
     // arrange
     (store.get as Mock).mockReturnValueOnce([]);
-    const mockProvider = {
-      getUsers: vi.fn().mockResolvedValue(mockUsers),
-    };
-    (createProvider as Mock).mockReturnValue(mockProvider);
+    vi.spyOn(mockAIProvider, 'getUsers').mockResolvedValue(mockUsers);
 
     // act
     await userListCommand({ sync: true });
 
     // assert
     expect(store.get).toHaveBeenCalledWith('users');
-    expect(mockProvider.getUsers).toHaveBeenCalled();
+    expect(mockAIProvider.getUsers).toHaveBeenCalled();
     expect(store.set).toHaveBeenCalledWith('users', mockUsers);
   });
 
   it('should not fetch users from providers when store is not empty', async () => {
     // arrange
     (store.get as Mock).mockReturnValueOnce(mockUsers);
-
-    const mockProvider = {
-      getUsers: vi.fn(),
-    };
-    (createProvider as Mock).mockReturnValue(mockProvider);
+    vi.spyOn(mockAIProvider, 'getUsers').mockResolvedValue(mockUsers);
 
     // act
     await userListCommand({ sync: false });
 
     // assert
     expect(store.get).toHaveBeenCalledWith('users');
-    expect(mockProvider.getUsers).not.toHaveBeenCalled(); // Should not call getUsers
+    expect(mockAIProvider.getUsers).not.toHaveBeenCalled(); // Should not call getUsers
   });
 
   it('should apply filter that returns results', async () => {
@@ -83,17 +93,14 @@ describe('userListCommand', () => {
     // arrange
     (store.get as Mock).mockReturnValueOnce([]);
 
-    const mockProvider = {
-      getUsers: vi.fn().mockResolvedValue([]), // No users returned
-    };
-    (createProvider as Mock).mockReturnValue(mockProvider);
+    vi.spyOn(mockAIProvider, 'getUsers').mockResolvedValue([]);
 
     // act
     await userListCommand({ sync: true });
 
     // assert
     expect(store.get).toHaveBeenCalledWith('users');
-    expect(mockProvider.getUsers).toHaveBeenCalled();
+    expect(mockAIProvider.getUsers).toHaveBeenCalled();
     expect(store.set).toHaveBeenCalledWith('users', []);
   });
 
@@ -101,17 +108,14 @@ describe('userListCommand', () => {
     // arrange
     (store.get as Mock).mockReturnValueOnce([]);
 
-    const mockProvider = {
-      getUsers: vi.fn().mockResolvedValue([]), // No users returned
-    };
-    (createProvider as Mock).mockReturnValue(mockProvider);
+    vi.spyOn(mockAIProvider, 'getUsers').mockResolvedValue([]);
 
     // act
     await userListCommand({ sync: true });
 
     // assert
     expect(store.get).toHaveBeenCalledWith('users');
-    expect(mockProvider.getUsers).toHaveBeenCalled();
+    expect(mockAIProvider.getUsers).toHaveBeenCalled();
     expect(store.set).toHaveBeenCalledWith('users', []);
   });
 });

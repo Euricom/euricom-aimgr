@@ -58,10 +58,8 @@ describe('Store', () => {
 
     it('should handle permission errors', () => {
       store.set('key', 'value');
-      // Make file read-only
       fs.chmodSync(STORE_PATH, 0o444);
       expect(() => store.set('key2', 'value2')).toThrow();
-      // Restore permissions for cleanup
       fs.chmodSync(STORE_PATH, 0o666);
     });
   });

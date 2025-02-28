@@ -1,21 +1,42 @@
+import { Invite } from '@/domain/invite';
 import { User } from '@/domain/user';
+import { AIProvider } from '@/providers/ai-provider';
 import { createProvider } from '@/providers/ai-provider-factory';
 import * as store from '@/store';
 import * as loading from '@/utils/loading';
 import consola from 'consola';
-import { describe, expect, it, Mock, vi } from 'vitest';
+import { beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import { userInfoCommand } from './command-info';
 
+// Define a comprehensive mock for the AI provider
+let mockAIProvider: AIProvider = {
+  getName: vi.fn().mockReturnValue('mockProvider'),
+  getUserDetails: vi.fn().mockResolvedValue(undefined),
+  getUsers: vi.fn().mockResolvedValue([]),
+  getUserFromProvider: vi.fn().mockResolvedValue(undefined),
+  getUserPendingInvite: vi.fn().mockResolvedValue(undefined),
+  getInvites: vi.fn().mockResolvedValue([]),
+  getUserWorkspace: vi.fn().mockResolvedValue(undefined),
+  getWorkspaceApiKeys: vi.fn().mockResolvedValue([]),
+  inviteUser: vi.fn().mockResolvedValue(false),
+  assignUserToWorkspace: vi.fn().mockResolvedValue(false),
+  removeUser: vi.fn().mockResolvedValue(false),
+  removeWorkspace: vi.fn().mockResolvedValue(false),
+  removeInvite: vi.fn().mockResolvedValue(false),
+};
+
+// Mock the entire module and provide a custom implementation for createProvider
+vi.mock('@/providers/ai-provider-factory', () => ({
+  createProvider: vi.fn(() => mockAIProvider),
+}));
+
 vi.mock('@/store');
-vi.mock('@/providers/ai-provider-factory');
-vi.mock('consola');
-vi.mock('@/utils/loading');
 
 describe('userInfoCommand', () => {
-  const mockUser: User = {
+  let mockUser: User = {
     email: 'user@example.com',
     name: 'User Example',
-    providers: [{ name: 'openai', creditsUsed: 10, apiKeys: [] }],
+    providers: [{ name: 'openai', creditsUsed: 10, apiKeys: [{ keyHint: '123', name: 'test' }] }],
   };
 
   beforeEach(() => {
@@ -24,12 +45,7 @@ describe('userInfoCommand', () => {
 
   it('should fetch user info and update store', async () => {
     // arrange
-    const mockProvider = {
-      getUserPendingInvite: vi.fn().mockResolvedValue(undefined),
-      getUserDetails: vi.fn().mockResolvedValue(mockUser),
-      getName: vi.fn().mockReturnValue('openai'),
-    };
-    (createProvider as Mock).mockReturnValue(mockProvider);
+    vi.spyOn(mockAIProvider, 'getUserDetails').mockResolvedValue(mockUser);
 
     // act
     await userInfoCommand('user@example.com');
@@ -41,18 +57,16 @@ describe('userInfoCommand', () => {
 
   it('should handle pending invites', async () => {
     // arrange
-    const mockProvider = {
-      getUserPendingInvite: vi.fn().mockResolvedValue({
-        email: 'user@example.com',
-        provider: 'anthropic',
-        invitedAt: new Date(),
-        expiresAt: new Date(),
-        id: '1',
-      }),
-      getUserDetails: vi.fn().mockResolvedValue(mockUser),
-      getName: vi.fn().mockReturnValue('openai'),
+    const pendingInvite: Invite = {
+      email: 'user@example.com',
+      provider: 'anthropic',
+      invitedAt: new Date(),
+      expiresAt: new Date(),
+      id: '1',
+      status: 'pending',
     };
-    (createProvider as Mock).mockReturnValue(mockProvider);
+    vi.spyOn(mockAIProvider, 'getUserPendingInvite').mockResolvedValue(pendingInvite);
+    vi.spyOn(mockAIProvider, 'getUserDetails').mockResolvedValue(mockUser);
 
     // act
     await userInfoCommand('user@example.com');
@@ -63,12 +77,8 @@ describe('userInfoCommand', () => {
 
   it('should handle user not found', async () => {
     // arrange
-    const mockProvider = {
-      getUserPendingInvite: vi.fn().mockResolvedValue(undefined),
-      getUserDetails: vi.fn().mockResolvedValue(undefined),
-      getName: vi.fn().mockReturnValue('openai'),
-    };
-    (createProvider as Mock).mockReturnValue(mockProvider);
+    vi.spyOn(mockAIProvider, 'getUserPendingInvite').mockResolvedValue(undefined);
+    vi.spyOn(mockAIProvider, 'getUserDetails').mockResolvedValue(undefined);
 
     // act
     await userInfoCommand('user@example.com');
@@ -84,12 +94,8 @@ describe('userInfoCommand', () => {
       name: 'User Example',
       providers: [{ name: 'openai', creditsUsed: 0, apiKeys: [] }],
     };
-    const mockProvider = {
-      getUserPendingInvite: vi.fn().mockResolvedValue(undefined),
-      getUserDetails: vi.fn().mockResolvedValue(mockUserNoKeys),
-      getName: vi.fn().mockReturnValue('openai'),
-    };
-    (createProvider as Mock).mockReturnValue(mockProvider);
+    vi.spyOn(mockAIProvider, 'getUserPendingInvite').mockResolvedValue(undefined);
+    vi.spyOn(mockAIProvider, 'getUserDetails').mockResolvedValue(mockUserNoKeys);
 
     // act
     await userInfoCommand('user@example.com');

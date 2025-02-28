@@ -84,64 +84,6 @@ aimgr user remove <email> --provider -p <providers>  # Remove member from provid
 
 ## Technical Stack
 
-### Folder Structure
-
-```
-src/
-├── commands/                  # CLI command implementations
-│   ├── user/
-│   │   ├── assign/
-│   │   │   ├── command-assign.ts
-│   │   │   ├── command-assign.spec.ts
-│   │   ├── invite/
-│   │   │   ├── command-invite.ts
-│   │   │   ├── command-invite.spec.ts
-│   │   ├── info/
-│   │   │   ├── command-info.ts
-│   │   │   ├── command-info.spec.ts
-│   │   ├── list/
-│   │   │   ├── command-list.ts
-│   │   │   ├── command-list.spec.ts
-│   │   ├── remove/
-│   │   │   ├── command-remove.ts
-│   │   │   ├── command-remove.spec.ts
-│   │   ├── index.ts
-├── providers/                 # Provider implementations
-│   ├── anthropic-provider.ts
-│   ├── openai-provider.ts
-│   ├── ai-provider-factory.ts
-│   ├── ai-provider.ts
-├── utils/                     # Utility functions
-│   ├── base-api-client.ts
-│   ├── dates-utils.ts
-│   ├── display-table.ts
-│   ├── loading.ts
-├── domain/                    # Domain models
-│   ├── user.ts
-├── index.ts                   # Main CLI entry point
-```
-
-### Tools & Requirements
-
-- Node.js >=18
-- Package Manager: pnpm >=10.0.0
-- Language: TypeScript
-- Build: tsup
-- Linting: oxlint
-- Formatting: prettier
-- Spelling: cspell
-
-### Core Libraries
-
-- CLI Framework: Commander & Inquirer
-- UI Elements:
-  - Colors: chalk
-  - Loading: ora
-  - Console: consola
-  - Tables: cli-table3
-- Development: tsx
-- Debugging: debug
-
 ### Debugging
 
 This project uses the `debug` package for debugging. To enable debug logs:
