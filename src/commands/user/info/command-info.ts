@@ -13,18 +13,20 @@ export async function userInfoCommand(email: string) {
     invariant(email.includes('@'), 'Invalid email format. Email must contain "@"');
     // get the providers that have a pending invite
     const aiProviders = [createProvider('anthropic'), createProvider('openai')];
-    const pendingInviteActions = aiProviders.map(async aiProvider => {
-      const pendingInvite = await aiProvider.getUserPendingInvite(email.toLowerCase());
-      if (pendingInvite) {
-        loading.warn(
-          `${email} has an invite for ${aiProvider.getName()}, pending since ${pendingInvite.invitedAt.toLocaleString()}`
-        );
-      }
-    });
-    await Promise.all(pendingInviteActions);
 
+    await Promise.all(
+      aiProviders.map(async aiProvider => {
+        const pendingInvite = await aiProvider.getUserPendingInvite(email.toLowerCase());
+        if (pendingInvite) {
+          loading.warn(
+            `${email} has an invite for ${aiProvider.getName()}, pending since ${pendingInvite.invitedAt.toLocaleString()}`
+          );
+        }
+      })
+    );
+
+    loading.start(`Loading user info for ${email}...`);
     // fetch the user info from the providers
-    loading.start(`Fetching user details for ${email}...`);
     const userDetailsFromProviders = await Promise.all(
       aiProviders.map(aiProvider => aiProvider.getUserDetails(email.toLowerCase()))
     );

@@ -10,42 +10,42 @@ export async function userInviteCommand(email: string, options: { provider?: str
 
     // If provider is provided, filter the aiProviders array
     if (options.provider) {
-      const requestedProviders = options.provider.split(' ').map(p => p.trim() as ProviderType);
+      const requestedProviders = options.provider.split(',').map(p => p.trim() as ProviderType);
       aiProviders = requestedProviders.map(provider => createProvider(provider as ProviderType));
     }
 
-    const inviteActions = aiProviders.map(async aiProvider => {
-      try {
-        loading.start(`Inviting ${email} to ${aiProvider.getName()}...`);
-        const foundUser = await aiProvider.getUserFromProvider(email);
+    await Promise.all(
+      aiProviders.map(async aiProvider => {
+        try {
+          loading.start(`Inviting ${email} to ${aiProvider.getName()}...`);
+          const foundUser = await aiProvider.getUserFromProvider(email);
 
-        if (foundUser) {
-          loading.warn(`${email} is already a member of ${aiProvider.getName()}.`);
-          return;
+          if (foundUser) {
+            loading.warn(`${email} is already a member of ${aiProvider.getName()}.`);
+            return;
+          }
+
+          const pendingInvite = await aiProvider.getUserPendingInvite(email);
+          if (pendingInvite) {
+            loading.warn(
+              `${email} is already invited to ${aiProvider.getName()} and waiting for acceptance since ${pendingInvite.invitedAt.toLocaleString()}`
+            );
+            return;
+          }
+
+          const isInvited = await aiProvider.inviteUser(email.toLowerCase());
+          if (isInvited) {
+            loading.succeed(`Invited ${email} to ${aiProvider.getName()} and waiting for acceptance.`);
+          } else {
+            loading.fail(`Failed to invite ${email} to ${aiProvider.getName()}.`);
+          }
+        } catch (error) {
+          consola.error(error);
+        } finally {
+          loading.stop();
         }
-
-        const pendingInvite = await aiProvider.getUserPendingInvite(email);
-        if (pendingInvite) {
-          loading.warn(
-            `${email} is already invited to ${aiProvider.getName()} and waiting for acceptance since ${pendingInvite.invitedAt.toLocaleString()}`
-          );
-          return;
-        }
-
-        const isInvited = await aiProvider.inviteUser(email.toLowerCase());
-        if (isInvited) {
-          loading.succeed(`Invited ${email} to ${aiProvider.getName()} and waiting for acceptance.`);
-        } else {
-          loading.fail(`Failed to invite ${email} to ${aiProvider.getName()}.`);
-        }
-      } catch (error) {
-        consola.error(error);
-      } finally {
-        loading.stop();
-      }
-    });
-
-    await Promise.all(inviteActions);
+      })
+    );
   } catch (error) {
     consola.error(error);
   }

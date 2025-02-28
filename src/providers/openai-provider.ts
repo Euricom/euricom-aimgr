@@ -1,7 +1,7 @@
 import { Invite } from '@/domain/invite';
 import { User } from '@/domain/user';
 import { BaseAPIClient } from '@/utils/base-api-client';
-import { getEndOfToday, getStartOfCurrentMonth } from '@/utils/dates-utils';
+import { getEndOfCurrentMonth, getStartOfCurrentMonth } from '@/utils/dates-utils';
 import invariant from 'tiny-invariant';
 import { AIProvider } from './ai-provider';
 
@@ -104,6 +104,12 @@ interface DeleteUserDto {
 
 interface DeleteInviteDto {
   object: 'organization.invite.deleted';
+  id: string;
+  deleted: boolean;
+}
+
+interface DeleteApiKeyDto {
+  object: 'organization.project.api_key.deleted';
   id: string;
   deleted: boolean;
 }
@@ -252,7 +258,7 @@ export class OpenAIProvider extends AIProvider {
     };
   }
 
-  async getWorkspaceApiKeys(workspaceId: string): Promise<{ name: string; keyHint: string }[]> {
+  async getWorkspaceApiKeys(workspaceId: string): Promise<{ name: string; keyHint: string; id: string }[]> {
     const apiKeysResponses = await this.client.get<ListDto<ProjectApiKeyDto>>(
       `/projects/${workspaceId}/api_keys?limit=100`
     );
@@ -260,6 +266,7 @@ export class OpenAIProvider extends AIProvider {
     return apiKeysResponses.data.map(key => ({
       name: key.name,
       keyHint: key.redacted_value.slice(0, 20) + key.redacted_value.slice(-4),
+      id: key.id,
     }));
   }
 
@@ -294,12 +301,16 @@ export class OpenAIProvider extends AIProvider {
   }
 
   async removeWorkspace(workspaceId: string): Promise<boolean> {
-    const archiveWorkspaceResponse = await this.client.post<ProjectDto>(`/projects/${workspaceId}/archive`, {});
-    if (archiveWorkspaceResponse.status === 'archived') {
-      return true;
+    // Check if the workspace has api keys
+    const apiKeys = await this.getWorkspaceApiKeys(workspaceId);
+    if (apiKeys.length > 0) {
+      // Delete the api keys
+      await Promise.all(apiKeys.map(key => this.removeApiKey(key.id, workspaceId)));
     }
 
-    return false;
+    // Proceed to remove the workspace
+    const archiveWorkspaceResponse = await this.client.post<ProjectDto>(`/projects/${workspaceId}/archive`, {});
+    return archiveWorkspaceResponse.status === 'archived';
   }
 
   async removeInvite(inviteId: string): Promise<boolean> {
@@ -327,12 +338,17 @@ export class OpenAIProvider extends AIProvider {
     return allItems;
   }
 
+  private async removeApiKey(apiKeyId: string, workspaceId: string): Promise<boolean> {
+    const { deleted } = await this.client.delete<DeleteApiKeyDto>(`/projects/${workspaceId}/api_keys/${apiKeyId}`);
+    return deleted;
+  }
+
   private async getUsedCredits(userProjectId: string): Promise<number | undefined> {
     const params = new URLSearchParams({
       start_time: getStartOfCurrentMonth(), // Get start of the current month (1st day of the month at 00:00:00)
-      end_time: getEndOfToday(), // get end of today
+      end_time: getEndOfCurrentMonth(), // get end of today
       project_ids: userProjectId,
-      limit: '31', // limit to 31 days (will return 31 buckets, cost per day)
+      limit: '31', // limit to 31 days (will return 31 buckets, cost per day max. days in month)
     });
 
     const costsResponse = await this.client.get<CostDto>(`/costs?${params}`);
@@ -347,7 +363,7 @@ export class OpenAIProvider extends AIProvider {
       });
     });
 
-    return Math.round(usedCredits * 1000) / 1000; // Round to three decimal places
+    return Math.round(usedCredits * 100) / 100; // Round to two decimal places
   }
 
   private async isUserAssignedToWorkspace(workspaceId: string, userId: string): Promise<boolean> {

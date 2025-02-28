@@ -29,14 +29,18 @@ program
   )
   .addCommand(
     new Command('invite')
-      .description('Invite a new member to a provider')
+      .description(
+        'Invite a new member to a provider. If no optional provider is provided, all providers will be called.'
+      )
       .argument('<email>', "User's email address")
       .option('-p, --provider <providers>', 'Comma-separated list of providers (openai,anthropic)')
       .action(userInviteCommand)
   )
   .addCommand(
     new Command('assign')
-      .description('Assign a workspace for the provider member to manage API keys')
+      .description(
+        'Assign a workspace for the provider member to manage API keys. If no optional provider is provided, all providers will be called.'
+      )
       .argument('<email>', "User's email address")
       .option('-p, --provider <providers>', 'Comma-separated list of providers (openai,anthropic)')
       .action(userAssignCommand)
@@ -49,7 +53,7 @@ program
   )
   .addCommand(
     new Command('remove')
-      .description('Remove member from provider. If no optional provider is provided, all providers will be removed.')
+      .description('Remove member from provider. If no optional provider is provided, all providers will be called.')
       .argument('<email>', "User's email address")
       .option('-p, --provider <providers>', 'Comma-separated list of providers (openai,anthropic)')
       .action(userRemoveCommand)

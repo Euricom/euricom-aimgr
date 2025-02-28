@@ -58,27 +58,27 @@ pnpm test          # Run tests
 
 ```bash
 # Show help and version
-aimgr --help
-aimgr --version
+aimgr --help -h
+aimgr --version -v
 
 # User Management
 aimgr user list                    # List all registered users
-aimgr user list --filter <filter>  # Filter users by email
-aimgr user list --sync             # Force sync with providers
+aimgr user list --filter -f <filter>  # Filter users by email
+aimgr user list --sync -s            # Force sync with providers
 aimgr user info <email>            # Show detailed user info
 
 # User Invite
-aimgr user invite <email> --provider <providers>  # Invite a new member to a provider
-# Example: aimgr user invite john@example.com --provider openai
+aimgr user invite <email> --provider -p <providers>  # Invite a new member to a provider
+# Example: aimgr user invite john@example.com --provider -p openai
 
 # User Assign to Workspace
-aimgr user assign <email> --provider <providers>   # Assign a workspace for the user
-# Example: aimgr user assign john@example.com --provider openai
+aimgr user assign <email> --provider -p <providers>   # Assign a workspace for the user
+# Example: aimgr user assign john@example.com --provider -p openai
 
 # User Removal
-aimgr user remove <email> [--provider <providers>]  # Remove member from provider
+aimgr user remove <email> --provider -p <providers>  # Remove member from provider
 # If no optional provider is provided, all providers will be removed.
-# Example: aimgr user remove john@example.com --provider openai
+# Example: aimgr user remove john@example.com --provider -p openai
 
 ```
 
@@ -88,17 +88,37 @@ aimgr user remove <email> [--provider <providers>]  # Remove member from provide
 
 ```
 src/
-├── commands/      # CLI command implementations
-│   ├── list.ts
-│   ├── create.ts
-├── providers/     # API provider implementations
-│   ├── openai.ts
-│   ├── anthropic.ts
-│   ├── open-router.ts
-├── utils/         # Utility functions
-│   ├── file-utils.ts
-│   ├── logger.ts
-├── cli.ts         # Main CLI entry point
+├── commands/                  # CLI command implementations
+│   ├── user/
+│   │   ├── assign/
+│   │   │   ├── command-assign.ts
+│   │   │   ├── command-assign.spec.ts
+│   │   ├── invite/
+│   │   │   ├── command-invite.ts
+│   │   │   ├── command-invite.spec.ts
+│   │   ├── info/
+│   │   │   ├── command-info.ts
+│   │   │   ├── command-info.spec.ts
+│   │   ├── list/
+│   │   │   ├── command-list.ts
+│   │   │   ├── command-list.spec.ts
+│   │   ├── remove/
+│   │   │   ├── command-remove.ts
+│   │   │   ├── command-remove.spec.ts
+│   │   ├── index.ts
+├── providers/                 # Provider implementations
+│   ├── anthropic-provider.ts
+│   ├── openai-provider.ts
+│   ├── ai-provider-factory.ts
+│   ├── ai-provider.ts
+├── utils/                     # Utility functions
+│   ├── base-api-client.ts
+│   ├── dates-utils.ts
+│   ├── display-table.ts
+│   ├── loading.ts
+├── domain/                    # Domain models
+│   ├── user.ts
+├── index.ts                   # Main CLI entry point
 ```
 
 ### Tools & Requirements
