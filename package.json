@@ -1,5 +1,5 @@
 {
-  "name": "api-manager",
+  "name": "aimgr",
   "version": "0.1.0",
   "description": "CLI tool for API key and user management",
   "main": "dist/index.js",

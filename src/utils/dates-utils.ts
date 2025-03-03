@@ -1,24 +1,20 @@
 export function getStartOfCurrentMonth(): string {
   const date = new Date();
-  // Set to first day of current month
-  date.setDate(1);
-  // Set time to start of day (00:00:00.000)
-  date.setHours(0, 0, 0, 0);
+  // Set to the first day of the current month
+  date.setUTCDate(1); // Use UTC to avoid timezone issues
+  date.setUTCHours(0, 0, 0, 0);
   return Math.floor(date.getTime() / 1000).toString();
 }
 
-/**
- * Gets the end of the current month (last day at 23:59:59.999) in Unix timestamp
- * @returns Unix timestamp as string
- */
 export function getEndOfCurrentMonth(): string {
   const date = new Date();
   // Move to first day of next month
-  date.setMonth(date.getMonth() + 1);
-  date.setDate(1);
-  // Subtract 1 millisecond to get last moment of current month
-  date.setTime(date.getTime() - 1);
+  date.setUTCMonth(date.getUTCMonth() + 1);
+  date.setUTCDate(1);
+  // Subtract 1 day to get the last day of the current month
+  date.setUTCDate(date.getUTCDate() - 1);
   // Set time to end of day (23:59:59.999)
-  date.setHours(23, 59, 59, 999);
+  date.setUTCHours(23, 59, 59, 999);
+
   return Math.floor(date.getTime() / 1000).toString();
 }

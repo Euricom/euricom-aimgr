@@ -4,22 +4,45 @@ CLI tool for API key and user management
 
 ## Installation
 
-First, install pnpm globally:
+To install the `aimgr` CLI tool on your machine, follow these steps:
+
+### 1. Install pnpm globally:
 
 ```bash
 npm install -g pnpm
 ```
 
-Then install dependencies:
+### 2. Install dependencies:
 
 ```bash
 pnpm install
 ```
 
-To install the CLI tool globally:
+### 3. Set Up Environment Variables:
+
+Create a `.env` file in the root directory and add your API keys:
 
 ```bash
-npm install https://github.com/euricom/euricom-aimgr.git --global
+OPENAI_ADMIN_KEY=your-openai-admin-key
+ANTHROPIC_ADMIN_KEY=your-anthropic-admin-key
+```
+
+### 4. Build the project:
+
+```bash
+pnpm build
+```
+
+### 5. Link the CLI Tool Globally:
+
+```bash
+pnpm link --global
+```
+
+### 6. Verify Installation:
+
+```bash
+aimgr --version
 ```
 
 ## Development

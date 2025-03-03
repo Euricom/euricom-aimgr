@@ -345,8 +345,8 @@ export class OpenAIProvider extends AIProvider {
 
   private async getUsedCredits(userProjectId: string): Promise<number | undefined> {
     const params = new URLSearchParams({
-      start_time: getStartOfCurrentMonth(), // Get start of the current month (1st day of the month at 00:00:00)
-      end_time: getEndOfCurrentMonth(), // get end of today
+      start_time: getStartOfCurrentMonth().toString(), // Get start of the current month (1st day of the month at 00:00:00)
+      end_time: getEndOfCurrentMonth().toString(), // get end of today
       project_ids: userProjectId,
       limit: '31', // limit to 31 days (will return 31 buckets, cost per day max. days in month)
     });
