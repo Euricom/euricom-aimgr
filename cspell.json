@@ -4,8 +4,6 @@
   "words": [
     "aimgr",
     "anthropic",
-    "euri",
-    "euricom",
     "ofetch",
     "openai",
     "openrouter",
@@ -23,7 +21,9 @@
     ".git/**",
     "pnpm-lock.yaml",
     "*.log",
-    ".env"
+    ".env",
+    "package.json",
+    "README.md"
   ],
   "allowCompoundWords": true,
   "ignoreRegExpList": ["\\(.*\\)", "\\[.*\\]"]

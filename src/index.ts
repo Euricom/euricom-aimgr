@@ -2,6 +2,7 @@
 
 import { Command } from '@commander-js/extra-typings';
 import dotenv from 'dotenv';
+import { version } from 'node:process';
 import {
   userAssignCommand,
   userInfoCommand,
@@ -14,7 +15,7 @@ dotenv.config();
 const program = new Command();
 
 // Setup basic program info
-program.name('aimgr').description('CLI tool for API key and user management').version('0.1.0');
+program.name('aimgr').description('CLI tool for API key and user management').version(version);
 
 // User commands
 program
@@ -23,7 +24,7 @@ program
   .addCommand(
     new Command('list')
       .description('List all registered users')
-      .option('-f, --filter <filter>', 'Filter users by name')
+      .option('-f, --filter <filter>', 'Filter users by email or name')
       .option('-s, --sync', 'Force sync with providers')
       .option('-i, --invite', 'Show invite list only (does not include users)')
       .action(userListCommand)

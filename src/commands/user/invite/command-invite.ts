@@ -1,4 +1,5 @@
 import { createProvider, ProviderType } from '@/providers/ai-provider-factory';
+import { handleError } from '@/utils/error-handling';
 import * as loading from '@/utils/loading';
 import consola from 'consola';
 import invariant from 'tiny-invariant';
@@ -47,6 +48,6 @@ export async function userInviteCommand(email: string, options: { provider?: str
       })
     );
   } catch (error) {
-    consola.error(error);
+    handleError(error);
   }
 }

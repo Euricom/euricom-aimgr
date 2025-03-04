@@ -2,6 +2,7 @@ import { mergeUsers, User } from '@/domain/user';
 import { createProvider } from '@/providers/ai-provider-factory';
 import * as store from '@/store';
 import { displayTable } from '@/utils/display-table';
+import { handleError } from '@/utils/error-handling';
 import * as loading from '@/utils/loading';
 import chalk from 'chalk';
 import consola from 'consola';
@@ -83,7 +84,7 @@ export async function userInfoCommand(email: string) {
     // Always display the table, even if no API keys are found
     displayTable(apiKeysData.length > 0 ? apiKeysData : [{ Provider: '/', 'ApiKey Name': '/', 'Key Hint': '/' }]);
   } catch (error) {
-    consola.error(error);
+    handleError(error);
   } finally {
     loading.stop();
   }

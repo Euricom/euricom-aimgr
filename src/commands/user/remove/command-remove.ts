@@ -1,6 +1,7 @@
 import { User } from '@/domain/user';
 import { createProvider, ProviderType } from '@/providers/ai-provider-factory';
 import * as store from '@/store';
+import { handleError } from '@/utils/error-handling';
 import * as loading from '@/utils/loading';
 import consola from 'consola';
 import invariant from 'tiny-invariant';
@@ -53,6 +54,6 @@ export async function userRemoveCommand(email: string, options: { provider?: str
       })
     );
   } catch (error) {
-    consola.error(error);
+    handleError(error);
   }
 }

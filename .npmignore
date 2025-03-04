@@ -1,0 +1,28 @@
+# Ignore node_modules
+node_modules/
+
+# Ignore test files
+*.spec.ts
+*.test.ts
+vitest.config.ts
+
+# Ignore environment files
+.env
+
+# Ignore configuration files
+tsconfig.json
+tsup.config.ts
+.prettierrc
+.prettierignore
+.env
+.env.example
+.oxlintrc.json
+.store.json
+cspell.json
+masterplan.md
+.vscode
+src/
+tests/
+.cursorrules
+
+

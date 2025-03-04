@@ -1,5 +1,5 @@
 {
-  "name": "aimgr",
+  "name": "@euricom/aimgr",
   "version": "0.1.0",
   "description": "CLI tool for API key and user management",
   "main": "dist/index.js",
@@ -7,7 +7,6 @@
     "aimgr": "./dist/index.js"
   },
   "scripts": {
-    "prepare": "pnpm build",
     "build": "tsup",
     "build:watch": "tsup --watch",
     "start": "node bin/aimgr.js",
@@ -22,6 +21,8 @@
     "spell:fix": "cspell \"**/*.{ts,tsx,js,jsx,json,md}\" --fix",
     "test": "vitest"
   },
+  "license": "MIT",
+  "author": "Jens Erven",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.3",
     "@commander-js/extra-typings": "^11.1.0",

@@ -3,6 +3,7 @@ import { mergeUsers, User } from '@/domain/user';
 import { createProvider } from '@/providers/ai-provider-factory';
 import * as store from '@/store';
 import { displayTable } from '@/utils/display-table';
+import { handleError } from '@/utils/error-handling';
 import * as loading from '@/utils/loading';
 import chalk from 'chalk';
 import { consola } from 'consola';
@@ -84,7 +85,7 @@ export async function userListCommand(options: ListOptions) {
         : [{ email: '/', name: '/', 'member of?': '/', 'workspaces?': '/' }]
     );
   } catch (error) {
-    consola.error(error);
+    handleError(error);
   } finally {
     loading.stop();
   }
