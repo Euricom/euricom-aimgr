@@ -1,6 +1,6 @@
 {
   "name": "@euricom/aimgr",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CLI tool for API key and user management",
   "main": "dist/index.js",
   "bin": {
