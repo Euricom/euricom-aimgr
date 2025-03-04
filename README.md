@@ -2,6 +2,13 @@
 
 CLI tool for API key and user management for AI providers.
 
+### Supported Providers
+
+This CLI tool supports the following providers:
+
+- **OpenAI**
+- **Anthropic**
+
 ## Installation
 
 To install the `aimgr` CLI tool on your machine, follow these steps:

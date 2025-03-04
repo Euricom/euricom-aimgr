@@ -14,7 +14,7 @@ dotenv.config();
 const program = new Command();
 
 // Setup basic program info
-program.name('aimgr').description('CLI tool for API key and user management for AI providers.').version('1.0.2');
+program.name('aimgr').description('CLI tool for API key and user management for AI providers.').version('1.0.3');
 
 // User commands
 program
