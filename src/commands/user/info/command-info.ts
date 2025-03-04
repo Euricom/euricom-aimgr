@@ -2,7 +2,6 @@ import { mergeUsers, User } from '@/domain/user';
 import { createProvider } from '@/providers/ai-provider-factory';
 import * as store from '@/store';
 import { displayTable } from '@/utils/display-table';
-import { handleError } from '@/utils/error-handling';
 import * as loading from '@/utils/loading';
 import chalk from 'chalk';
 import consola from 'consola';
@@ -11,7 +10,10 @@ import invariant from 'tiny-invariant';
 export async function userInfoCommand(email: string) {
   try {
     loading.start(`Loading user info for ${email}...`);
-    invariant(email.includes('@'), 'Invalid email format. Email must contain "@"');
+    invariant(
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
+      'Invalid email format. Email must contain "@" and a valid domain.'
+    );
     // get the providers that have a pending invite
     const aiProviders = [createProvider('anthropic'), createProvider('openai')];
 
@@ -83,8 +85,12 @@ export async function userInfoCommand(email: string) {
 
     // Always display the table, even if no API keys are found
     displayTable(apiKeysData.length > 0 ? apiKeysData : [{ Provider: '/', 'ApiKey Name': '/', 'Key Hint': '/' }]);
-  } catch (error) {
-    handleError(error);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      consola.error(error.message);
+    } else {
+      consola.error('An unknown error occurred', error);
+    }
   } finally {
     loading.stop();
   }

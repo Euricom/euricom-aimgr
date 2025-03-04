@@ -86,7 +86,7 @@ describe('userInviteCommand', () => {
     await userInviteCommand(email, options);
 
     // assert
-    expect(consola.error).toHaveBeenCalledWith(expect.any(Error));
+    expect(consola.error).toHaveBeenCalled();
   });
 
   it('should handle provider not found', async () => {

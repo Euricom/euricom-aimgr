@@ -1,12 +1,14 @@
 import { createProvider, ProviderType } from '@/providers/ai-provider-factory';
 import { handleError } from '@/utils/error-handling';
 import * as loading from '@/utils/loading';
-import consola from 'consola';
 import invariant from 'tiny-invariant';
 
 export async function userInviteCommand(email: string, options: { provider?: string }) {
   try {
-    invariant(email.includes('@'), 'Invalid email format. Email must contain "@"');
+    invariant(
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
+      'Invalid email format. Email must contain "@" and a valid domain.'
+    );
     let aiProviders = [createProvider('anthropic'), createProvider('openai')];
 
     // If provider is provided, filter the aiProviders array
@@ -40,8 +42,6 @@ export async function userInviteCommand(email: string, options: { provider?: str
           } else {
             loading.fail(`Failed to invite ${email} to ${aiProvider.getName()}.`);
           }
-        } catch (error) {
-          consola.error(error);
         } finally {
           loading.stop();
         }

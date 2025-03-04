@@ -2,7 +2,6 @@
 
 import { Command } from '@commander-js/extra-typings';
 import dotenv from 'dotenv';
-import { version } from 'node:process';
 import {
   userAssignCommand,
   userInfoCommand,
@@ -15,7 +14,7 @@ dotenv.config();
 const program = new Command();
 
 // Setup basic program info
-program.name('aimgr').description('CLI tool for API key and user management').version(version);
+program.name('aimgr').description('CLI tool for API key and user management').version();
 
 // User commands
 program
