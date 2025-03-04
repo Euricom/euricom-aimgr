@@ -14,8 +14,6 @@ yarn.lock
 .env.test
 .env.production
 
-# TypeScript
-dist/
 build/
 *.tsbuildinfo
 

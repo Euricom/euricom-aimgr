@@ -14,7 +14,7 @@ dotenv.config();
 const program = new Command();
 
 // Setup basic program info
-program.name('api-manager').description('CLI tool for API key and user management').version('0.1.0');
+program.name('aimgr').description('CLI tool for API key and user management').version('0.1.0');
 
 // User commands
 program
@@ -25,7 +25,9 @@ program
       .description('List all registered users')
       .option('-f, --filter <filter>', 'Filter users by name')
       .option('-s, --sync', 'Force sync with providers')
+      .option('-i, --invite', 'Show invite list only (does not include users)')
       .action(userListCommand)
+      .showHelpAfterError()
   )
   .addCommand(
     new Command('invite')
@@ -35,6 +37,7 @@ program
       .argument('<email>', "User's email address")
       .option('-p, --provider <providers>', 'Comma-separated list of providers (openai,anthropic)')
       .action(userInviteCommand)
+      .showHelpAfterError()
   )
   .addCommand(
     new Command('assign')
@@ -44,12 +47,14 @@ program
       .argument('<email>', "User's email address")
       .option('-p, --provider <providers>', 'Comma-separated list of providers (openai,anthropic)')
       .action(userAssignCommand)
+      .showHelpAfterError()
   )
   .addCommand(
     new Command('info')
       .description('Show detailed user info')
       .argument('<email>', "User's email address")
       .action(userInfoCommand)
+      .showHelpAfterError()
   )
   .addCommand(
     new Command('remove')
@@ -57,6 +62,7 @@ program
       .argument('<email>', "User's email address")
       .option('-p, --provider <providers>', 'Comma-separated list of providers (openai,anthropic)')
       .action(userRemoveCommand)
+      .showHelpAfterError()
   );
 
 program.parse();
