@@ -14,8 +14,4 @@ export default defineConfig({
   splitting: false,
   target: 'node18',
   treeshake: true,
-  define: {
-    'process.env.OPENAI_ADMIN_KEY': JSON.stringify(process.env.OPENAI_ADMIN_KEY),
-    'process.env.ANTHROPIC_ADMIN_KEY': JSON.stringify(process.env.ANTHROPIC_ADMIN_KEY),
-  },
 });
